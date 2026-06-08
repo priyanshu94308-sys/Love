@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rplove 💌</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose: #e8547a;
+    --deep: #1a0a0f;
+    --card: #25101a;
+    --soft: #3d1a27;
+    --text: #f5e6ec;
+    --muted: #a07080;
+    --sent: #c23a60;
+    --recv: #2e1520;
+    --glow: rgba(232,84,122,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--deep);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(232,84,122,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(180,40,80,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* LOGIN SCREEN */
+  #loginScreen {
+    position: fixed;
+    inset: 0;
+    background: var(--deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
+    animation: fadeUp 0.6s ease;
+  }
+
+  .heart-logo {
+    font-size: 52px;
+    display: block;
+    margin-bottom: 8px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .login-box h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--rose);
+    margin-bottom: 4px;
+  }
+
+  .login-box p {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 32px;
+    font-style: italic;
+  }
+
+  .name-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .name-btn {
+    background: var(--card);
+    border: 1.5px solid var(--soft);
+    color: var(--text);
+    padding: 16px 12px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .name-btn .emoji { font-size: 1.8rem; }
+  .name-btn span { font-size: 0.8rem; color: var(--muted); }
+
+  .name-btn:hover, .name-btn.active {
+    border-color: var(--rose);
+    background: var(--soft);
+    box-shadow: 0 0 20px var(--glow);
+    transform: translateY(-2px);
+  }
+
+  .custom-input {
+    background: var(--card);
+    border: 1.5px solid var(--soft);
+    color: var(--text);
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-family: 'DM Sans', sans-serif;
+    width: 100%;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .custom-input:focus { border-color: var(--rose); }
+  .custom-input::placeholder { color: var(--muted); }
+
+  .enter-btn {
+    background: linear-gradient(135deg, var(--rose), #a02050);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+
+  .enter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(232,84,122,0.4);
+  }
+
+  /* CHAT SCREEN */
+  #chatScreen {
+    display: none;
+    flex-direction: column;
+    height: 100dvh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  .chat-header {
+    background: rgba(37,16,26,0.95);
+    backdrop-filter: blur(20px);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(232,84,122,0.15);
+    flex-shrink: 0;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--rose), #a02050);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .header-info h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .online-badge {
+    font-size: 0.7rem;
+    color: #5eea8a;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .online-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: #5eea8a;
+    border-radius: 50%;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .header-rose {
+    margin-left: auto;
+    font-size: 1.3rem;
+  }
+
+  /* MESSAGES */
+  #messagesBox {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scroll-behavior: smooth;
+  }
+
+  #messagesBox::-webkit-scrollbar { width: 3px; }
+  #messagesBox::-webkit-scrollbar-track { background: transparent; }
+  #messagesBox::-webkit-scrollbar-thumb { background: var(--soft); border-radius: 2px; }
+
+  .msg-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 78%;
+    animation: fadeUp 0.25s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-wrap.sent { align-self: flex-end; align-items: flex-end; }
+  .msg-wrap.recv { align-self: flex-start; align-items: flex-start; }
+
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .sent .msg-bubble {
+    background: linear-gradient(135deg, var(--sent), #a02050);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+
+  .recv .msg-bubble {
+    background: var(--recv);
+    color: var(--text);
+    border: 1px solid var(--soft);
+    border-bottom-left-radius: 4px;
+  }
+
+  .msg-meta {
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 3px;
+    padding: 0 4px;
+  }
+
+  .msg-name {
+    font-size: 0.7rem;
+    color: var(--rose);
+    margin-bottom: 2px;
+    padding: 0 4px;
+    font-weight: 500;
+  }
+
+  /* DATE DIVIDER */
+  .date-divider {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.7rem;
+    margin: 8px 0;
+    position: relative;
+  }
+
+  .date-divider::before, .date-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 30%;
+    height: 1px;
+    background: var(--soft);
+  }
+
+  .date-divider::before { left: 0; }
+  .date-divider::after { right: 0; }
+
+  /* TYPING INDICATOR */
+  #typingIndicator {
+    padding: 4px 16px 0;
+    font-size: 0.75rem;
+    color: var(--muted);
+    min-height: 20px;
+    font-style: italic;
+  }
+
+  /* INPUT AREA */
+  .chat-input-area {
+    background: rgba(37,16,26,0.98);
+    backdrop-filter: blur(20px);
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    border-top: 1px solid rgba(232,84,122,0.12);
+    flex-shrink: 0;
+  }
+
+  #msgInput {
+    flex: 1;
+    background: var(--card);
+    border: 1.5px solid var(--soft);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 22px;
+    font-size: 0.92rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    resize: none;
+    max-height: 100px;
+    line-height: 1.4;
+    transition: border-color 0.2s;
+  }
+
+  #msgInput:focus { border-color: var(--rose); }
+  #msgInput::placeholder { color: var(--muted); }
+
+  #sendBtn {
+    width: 46px;
+    height: 46px;
+    background: linear-gradient(135deg, var(--rose), #a02050);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(232,84,122,0.3);
+  }
+
+  #sendBtn:hover { transform: scale(1.05); }
+  #sendBtn:active { transform: scale(0.95); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    gap: 8px;
+    text-align: center;
+    padding: 40px;
+  }
+
+  .empty-state .big-heart { font-size: 3rem; opacity: 0.5; }
+  .empty-state p { font-style: italic; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--soft);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+    border: 1px solid var(--rose);
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <span class="heart-logo">💌</span>
+    <h1>Rplove</h1>
+    <p>sirf tumhare liye...</p>
+
+    <div class="name-options">
+      <button class="name-btn" onclick="selectName('Priyanshu', '👦', this)">
+        <span class="emoji">👦</span>
+        Priyanshu
+        <span>Admin</span>
+      </button>
+      <button class="name-btn" onclick="selectName('Jaan', '👧', this)">
+        <span class="emoji">👧</span>
+        Jaan
+        <span>Guest</span>
+      </button>
+    </div>
+
+    <input type="text" class="custom-input" id="customName" placeholder="Ya apna naam likho..." maxlength="20">
+
+    <button class="enter-btn" onclick="enterChat()">Chat Karo 💕</button>
+  </div>
+</div>
+
+<!-- CHAT SCREEN -->
+<div id="chatScreen">
+  <div class="chat-header">
+    <div class="avatar" id="headerAvatar">💌</div>
+    <div class="header-info">
+      <h2 id="headerName">Rplove</h2>
+      <div class="online-badge" id="onlineStatus">online</div>
+    </div>
+    <div class="header-rose">🌹</div>
+  </div>
+
+  <div id="messagesBox">
+    <div class="empty-state" id="emptyState">
+      <span class="big-heart">💕</span>
+      <p>Pehla message bhejo...</p>
+    </div>
+  </div>
+
+  <div id="typingIndicator"></div>
+
+  <div class="chat-input-area">
+    <textarea id="msgInput" placeholder="Kuch likho..." rows="1"></textarea>
+    <button id="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, serverTimestamp, set, onDisconnect, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCJzOSIZfY1OBS372rzZK3NNO4W3VXV6GU",
+  authDomain: "rplove-d8469.firebaseapp.com",
+  databaseURL: "https://rplove-d8469-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "rplove-d8469",
+  storageBucket: "rplove-d8469.firebasestorage.app",
+  messagingSenderId: "557495378550",
+  appId: "1:557495378550:web:9262d90aa39a2463c0b557"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let myName = '';
+let myEmoji = '💬';
+let typingTimeout;
+
+// Name selection
+window.selectName = (name, emoji, btn) => {
+  document.querySelectorAll('.name-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('customName').value = name;
+  myEmoji = emoji;
+};
+
+window.enterChat = () => {
+  const input = document.getElementById('customName').value.trim();
+  if (!input) { showToast('Naam toh likho! 😊'); return; }
+  myName = input;
+  if (!myEmoji || myEmoji === '💬') myEmoji = '💬';
+
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('chatScreen').style.display = 'flex';
+  document.getElementById('headerName').textContent = myName === 'Priyanshu' ? 'Jaan 💕' : 'Priyanshu 💕';
+  document.getElementById('headerAvatar').textContent = myName === 'Priyanshu' ? '👧' : '👦';
+
+  initPresence();
+  loadMessages();
+  setupTyping();
+};
+
+// Presence
+function initPresence() {
+  const presRef = ref(db, `rplove/presence/${myName}`);
+  set(presRef, { online: true, name: myName });
+  onDisconnect(presRef).set({ online: false, name: myName });
+
+  // Watch other person
+  const otherName = myName === 'Priyanshu' ? 'Jaan' : 'Priyanshu';
+  onValue(ref(db, `rplove/presence/${otherName}`), snap => {
+    const data = snap.val();
+    const badge = document.getElementById('onlineStatus');
+    if (data && data.online) {
+      badge.textContent = 'online';
+      badge.style.color = '#5eea8a';
+    } else {
+      badge.textContent = 'offline';
+      badge.style.color = '#a07080';
+    }
+  });
+}
+
+// Load messages
+function loadMessages() {
+  onValue(ref(db, 'rplove/messages'), snap => {
+    const box = document.getElementById('messagesBox');
+    const emptyState = document.getElementById('emptyState');
+    const data = snap.val();
+
+    if (!data) {
+      emptyState.style.display = 'flex';
+      return;
+    }
+
+    emptyState.style.display = 'none';
+
+    // Clear existing messages (keep empty state)
+    const existing = box.querySelectorAll('.msg-wrap, .date-divider');
+    existing.forEach(el => el.remove());
+
+    const msgs = Object.values(data).sort((a, b) => a.ts - b.ts);
+    let lastDate = '';
+
+    msgs.forEach(msg => {
+      const date = msg.ts ? new Date(msg.ts).toLocaleDateString('hi-IN', { day: 'numeric', month: 'short' }) : '';
+      if (date && date !== lastDate) {
+        lastDate = date;
+        const div = document.createElement('div');
+        div.className = 'date-divider';
+        div.textContent = date;
+        box.appendChild(div);
+      }
+
+      const wrap = document.createElement('div');
+      wrap.className = `msg-wrap ${msg.name === myName ? 'sent' : 'recv'}`;
+
+      const time = msg.ts ? new Date(msg.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+
+      if (msg.name !== myName) {
+        const nameEl = document.createElement('div');
+        nameEl.className = 'msg-name';
+        nameEl.textContent = msg.emoji + ' ' + msg.name;
+        wrap.appendChild(nameEl);
+      }
+
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.textContent = msg.text;
+      wrap.appendChild(bubble);
+
+      const meta = document.createElement('div');
+      meta.className = 'msg-meta';
+      meta.textContent = time;
+      wrap.appendChild(meta);
+
+      box.appendChild(wrap);
+    });
+
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+// Send message
+window.sendMessage = () => {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  push(ref(db, 'rplove/messages'), {
+    name: myName,
+    emoji: myEmoji,
+    text: text,
+    ts: Date.now()
+  });
+
+  input.value = '';
+  input.style.height = 'auto';
+  clearTyping();
+};
+
+// Typing indicator
+function setupTyping() {
+  const input = document.getElementById('msgInput');
+
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+
+    set(ref(db, `rplove/typing/${myName}`), { typing: true, name: myName });
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(clearTyping, 2000);
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      window.sendMessage();
+    }
+  });
+
+  // Watch other's typing
+  const otherName = myName === 'Priyanshu' ? 'Jaan' : 'Priyanshu';
+  onValue(ref(db, `rplove/typing/${otherName}`), snap => {
+    const data = snap.val();
+    const indicator = document.getElementById('typingIndicator');
+    if (data && data.typing) {
+      indicator.textContent = `${otherName} likh raha/rahi hai... 💭`;
+    } else {
+      indicator.textContent = '';
+    }
+  });
+}
+
+function clearTyping() {
+  set(ref(db, `rplove/typing/${myName}`), { typing: false });
+}
+
+window.showToast = (msg) => {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+};
+
+// Clear typing on page hide
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && myName) clearTyping();
+});
+</script>
+</body>
+</html>
