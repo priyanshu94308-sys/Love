@@ -21,6 +21,7 @@
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
 
+  /* LOGIN */
   #loginScreen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:100; padding:28px; }
   .login-box { width:100%; max-width:320px; text-align:center; }
   .login-icon { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,#e8547a,#a02050); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 16px; }
@@ -32,66 +33,129 @@
   .login-btn { background:#e8547a; color:white; border:none; padding:14px; border-radius:10px; font-size:0.95rem; font-family:'DM Sans',sans-serif; font-weight:500; width:100%; cursor:pointer; margin-top:4px; }
   .login-btn:active { opacity:0.85; }
 
-  .chat-header { background:var(--panel); padding:10px 16px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid var(--border); }
+  /* HEADER */
+  .chat-header { background:var(--panel); padding:10px 16px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid var(--border); position:relative; }
   .avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#e8547a,#7b2d42); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; color:white; text-transform:uppercase; flex-shrink:0; }
   .header-info { flex:1; min-width:0; }
   .header-info h3 { font-size:0.97rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .online-dot { font-size:0.7rem; color:var(--online); display:flex; align-items:center; gap:4px; margin-top:2px; }
   .online-dot::before { content:''; width:6px; height:6px; background:var(--online); border-radius:50%; }
   .offline-dot { font-size:0.7rem; color:var(--muted); margin-top:2px; }
+  .header-mood { font-size:1.1rem; cursor:pointer; }
 
-  #clearBtn { display:none; background:rgba(232,84,122,0.12); border:1px solid rgba(232,84,122,0.4); color:#e8547a; padding:7px 11px; border-radius:8px; font-size:0.72rem; font-family:'DM Sans',sans-serif; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-left:auto; }
+  #clearBtn { display:none; background:rgba(232,84,122,0.12); border:1px solid rgba(232,84,122,0.4); color:#e8547a; padding:7px 11px; border-radius:8px; font-size:0.72rem; font-family:'DM Sans',sans-serif; cursor:pointer; white-space:nowrap; flex-shrink:0; }
   #clearBtn:active { background:rgba(232,84,122,0.25); }
 
+  /* PINNED */
+  #pinnedBar { display:none; background:#1a2a32; border-bottom:1px solid var(--border); padding:8px 16px; flex-shrink:0; cursor:pointer; }
+  .pinned-inner { display:flex; align-items:center; gap:8px; }
+  .pinned-inner span:first-child { font-size:0.8rem; color:#e8547a; }
+  .pinned-text { font-size:0.8rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; }
+
+  /* MESSAGES */
   #messagesBox { flex:1; overflow-y:auto; padding:12px 10px; display:flex; flex-direction:column; gap:4px; }
   #messagesBox::-webkit-scrollbar { width:3px; }
   #messagesBox::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-
-  .msg-wrap { display:flex; flex-direction:column; max-width:75%; animation:fadeUp 0.2s ease; }
+  .msg-wrap { display:flex; flex-direction:column; max-width:75%; animation:fadeUp 0.2s ease; position:relative; }
   @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
   .msg-wrap.sent { align-self:flex-end; align-items:flex-end; }
   .msg-wrap.recv { align-self:flex-start; align-items:flex-start; }
 
+  /* REPLY PREVIEW inside bubble */
+  .reply-preview { background:rgba(0,0,0,0.2); border-left:3px solid #e8547a; padding:5px 8px; border-radius:4px; margin-bottom:4px; font-size:0.75rem; color:var(--muted); max-width:100%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .reply-preview strong { color:#e8547a; display:block; font-size:0.7rem; }
+
   .msg-bubble { padding:8px 12px; border-radius:8px; font-size:0.88rem; line-height:1.5; word-break:break-word; }
   .sent .msg-bubble { background:var(--sent); border-bottom-right-radius:2px; }
   .recv .msg-bubble { background:var(--recv); border-bottom-left-radius:2px; border:1px solid var(--border); }
-
   .msg-photo { max-width:220px; max-height:260px; border-radius:8px; display:block; cursor:pointer; object-fit:cover; }
   .photo-bubble { padding:4px !important; }
+
+  /* REACTIONS */
+  .reactions { display:flex; gap:3px; margin-top:2px; flex-wrap:wrap; }
+  .reaction-badge { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:2px 6px; font-size:0.78rem; cursor:pointer; display:flex; align-items:center; gap:2px; }
+  .reaction-badge:active { transform:scale(1.2); }
 
   .msg-meta { font-size:0.65rem; color:var(--muted); margin-top:2px; padding:0 3px; display:flex; align-items:center; gap:3px; }
   .tick { font-size:0.7rem; color:var(--muted); }
   .tick.delivered { color:#25d366; }
   .msg-name { font-size:0.68rem; color:#e8547a; margin-bottom:2px; padding:0 3px; font-weight:500; }
   .date-div { text-align:center; color:var(--muted); font-size:0.68rem; margin:8px 0; background:rgba(32,44,51,0.8); padding:4px 12px; border-radius:8px; align-self:center; }
-
   .empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); font-size:0.82rem; gap:8px; text-align:center; }
-  .empty-state svg { opacity:0.3; }
 
-  #typingIndicator { padding:3px 16px; font-size:0.72rem; color:var(--muted); min-height:18px; font-style:italic; }
+  /* CONTEXT MENU */
+  #contextMenu { display:none; position:fixed; background:#2a3942; border-radius:12px; padding:6px; z-index:300; box-shadow:0 4px 20px rgba(0,0,0,0.5); min-width:160px; }
+  #contextMenu.show { display:block; }
+  .ctx-item { padding:10px 14px; font-size:0.85rem; cursor:pointer; border-radius:8px; display:flex; align-items:center; gap:10px; }
+  .ctx-item:hover { background:rgba(255,255,255,0.06); }
+  .ctx-item.danger { color:#e8547a; }
 
+  /* EMOJI REACTION PICKER */
+  #reactionPicker { display:none; position:fixed; background:#2a3942; border-radius:40px; padding:8px 12px; z-index:300; box-shadow:0 4px 20px rgba(0,0,0,0.5); }
+  #reactionPicker.show { display:flex; gap:8px; }
+  .react-btn { font-size:1.4rem; cursor:pointer; transition:transform 0.15s; }
+  .react-btn:active { transform:scale(1.3); }
+
+  /* REPLY BAR */
+  #replyBar { display:none; background:#1a2a32; border-top:1px solid var(--border); padding:8px 16px; flex-shrink:0; }
+  #replyBar.show { display:flex; align-items:center; gap:10px; }
+  .reply-info { flex:1; min-width:0; }
+  .reply-info strong { font-size:0.75rem; color:#e8547a; display:block; }
+  .reply-info span { font-size:0.78rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+  .reply-close { background:none; border:none; color:var(--muted); font-size:1.1rem; cursor:pointer; flex-shrink:0; }
+
+  /* TYPING */
+  #typingIndicator { padding:3px 16px; font-size:0.72rem; color:var(--muted); min-height:18px; font-style:italic; flex-shrink:0; }
   #uploadBar { display:none; padding:6px 16px; font-size:0.72rem; color:#e8547a; background:var(--panel); border-top:1px solid var(--border); flex-shrink:0; text-align:center; }
 
+  /* INPUT */
   .input-area { background:var(--panel); padding:8px 10px; padding-bottom:max(8px, env(safe-area-inset-bottom)); display:flex; align-items:flex-end; gap:8px; flex-shrink:0; border-top:1px solid var(--border); }
-  .photo-btn { width:42px; height:42px; background:var(--input-bg); border:none; border-radius:50%; color:var(--muted); font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .photo-btn:active { color:#e8547a; }
+  .photo-btn, .emoji-btn { width:38px; height:38px; background:var(--input-bg); border:none; border-radius:50%; color:var(--muted); font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .photo-btn:active, .emoji-btn:active { color:#e8547a; }
   #fileInput { display:none; }
-  #msgInput { flex:1; background:var(--input-bg); border:none; color:var(--text); padding:11px 14px; border-radius:22px; font-size:0.9rem; font-family:'DM Sans',sans-serif; outline:none; resize:none; max-height:100px; line-height:1.4; }
+  #msgInput { flex:1; background:var(--input-bg); border:none; color:var(--text); padding:10px 14px; border-radius:22px; font-size:0.9rem; font-family:'DM Sans',sans-serif; outline:none; resize:none; max-height:100px; line-height:1.4; }
   #msgInput::placeholder { color:var(--muted); }
   .send-btn { width:42px; height:42px; background:#e8547a; border:none; border-radius:50%; color:white; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .send-btn:active { opacity:0.8; }
 
+  /* EMOJI PICKER PANEL */
+  #emojiPanel { display:none; background:var(--panel); border-top:1px solid var(--border); padding:12px; flex-shrink:0; max-height:200px; overflow-y:auto; }
+  #emojiPanel.show { display:block; }
+  .emoji-grid { display:flex; flex-wrap:wrap; gap:4px; }
+  .ep-btn { font-size:1.4rem; padding:4px; cursor:pointer; border-radius:6px; border:none; background:none; }
+  .ep-btn:active { background:rgba(255,255,255,0.1); }
+
+  /* MOOD STATUS */
+  #moodBar { display:none; background:#1a2a32; padding:6px 16px; font-size:0.78rem; color:var(--muted); border-bottom:1px solid var(--border); flex-shrink:0; text-align:center; }
+
+  /* PHOTO OVERLAY */
   #photoOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:200; align-items:center; justify-content:center; }
   #photoOverlay.show { display:flex; }
   #photoOverlay img { max-width:95vw; max-height:92vh; border-radius:4px; object-fit:contain; }
   #closeOverlay { position:fixed; top:16px; right:16px; background:rgba(255,255,255,0.15); border:none; color:white; width:36px; height:36px; border-radius:50%; font-size:1.1rem; cursor:pointer; }
 
+  /* MOOD PICKER */
+  #moodPicker { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:300; align-items:flex-end; justify-content:center; }
+  #moodPicker.show { display:flex; }
+  .mood-box { background:var(--panel); border-radius:16px 16px 0 0; padding:20px; width:100%; max-width:400px; }
+  .mood-box h4 { font-size:0.9rem; margin-bottom:14px; text-align:center; color:var(--muted); }
+  .mood-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .mood-item { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:8px; border-radius:10px; }
+  .mood-item:active { background:rgba(255,255,255,0.08); }
+  .mood-item span:first-child { font-size:1.8rem; }
+  .mood-item span:last-child { font-size:0.65rem; color:var(--muted); }
+
+  /* NOTIF SOUND */
   .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(10px); background:var(--panel); color:var(--text); padding:8px 18px; border-radius:20px; font-size:0.8rem; opacity:0; transition:all 0.25s; z-index:999; border:1px solid var(--border); white-space:nowrap; }
   .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* THINKING BUTTON */
+  #thinkingBtn { display:none; }
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
     <div class="login-icon">💬</div>
@@ -103,6 +167,7 @@
   </div>
 </div>
 
+<!-- CHAT -->
 <div id="chatScreen" style="display:none;flex-direction:column;height:100dvh;">
   <div class="chat-header">
     <div class="avatar" id="headerAvatar">?</div>
@@ -110,12 +175,21 @@
       <h3 id="headerName">Chat</h3>
       <div id="onlineStatus" class="offline-dot">offline</div>
     </div>
-    <button id="clearBtn" onclick="clearMyMessages()">🗑 Clear (10min)</button>
+    <span class="header-mood" id="moodEmoji" onclick="openMoodPicker()" title="Mood set karo">😶</span>
+    <button id="clearBtn" onclick="clearMyMessages()">🗑 Clear</button>
+  </div>
+
+  <div id="moodBar"></div>
+  <div id="pinnedBar" onclick="scrollToPinned()">
+    <div class="pinned-inner">
+      <span>📌</span>
+      <span class="pinned-text" id="pinnedText"></span>
+    </div>
   </div>
 
   <div id="messagesBox">
     <div class="empty-state" id="emptyState">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
       <p>Koi message nahi abhi tak</p>
@@ -123,9 +197,21 @@
   </div>
 
   <div id="typingIndicator"></div>
-  <div id="uploadBar">📤 Photo compress & upload ho rahi hai...</div>
+  <div id="uploadBar">📤 Photo compress ho rahi hai...</div>
+  <div id="replyBar">
+    <div class="reply-info">
+      <strong id="replyName"></strong>
+      <span id="replyText"></span>
+    </div>
+    <button class="reply-close" onclick="cancelReply()">✕</button>
+  </div>
+
+  <div id="emojiPanel">
+    <div class="emoji-grid" id="emojiGrid"></div>
+  </div>
 
   <div class="input-area">
+    <button class="emoji-btn" onclick="toggleEmojiPanel()">😊</button>
     <button class="photo-btn" onclick="document.getElementById('fileInput').click()">📷</button>
     <input type="file" id="fileInput" accept="image/*">
     <textarea id="msgInput" placeholder="Message..." rows="1"></textarea>
@@ -133,16 +219,57 @@
   </div>
 </div>
 
+<!-- CONTEXT MENU -->
+<div id="contextMenu">
+  <div class="ctx-item" onclick="ctxReply()">↩️ Reply</div>
+  <div class="ctx-item" onclick="ctxReact()">❤️ React</div>
+  <div class="ctx-item" onclick="ctxPin()">📌 Pin</div>
+  <div class="ctx-item" onclick="ctxCopy()">📋 Copy</div>
+  <div class="ctx-item danger" id="ctxDeleteItem" onclick="ctxDelete()">🗑️ Delete</div>
+</div>
+
+<!-- REACTION PICKER -->
+<div id="reactionPicker">
+  <span class="react-btn" onclick="addReaction('❤️')">❤️</span>
+  <span class="react-btn" onclick="addReaction('😂')">😂</span>
+  <span class="react-btn" onclick="addReaction('😮')">😮</span>
+  <span class="react-btn" onclick="addReaction('😢')">😢</span>
+  <span class="react-btn" onclick="addReaction('🔥')">🔥</span>
+  <span class="react-btn" onclick="addReaction('💕')">💕</span>
+</div>
+
+<!-- PHOTO OVERLAY -->
 <div id="photoOverlay">
   <button id="closeOverlay" onclick="document.getElementById('photoOverlay').classList.remove('show')">✕</button>
   <img id="overlayImg" src="" alt="">
+</div>
+
+<!-- MOOD PICKER -->
+<div id="moodPicker" onclick="closeMoodPicker(event)">
+  <div class="mood-box">
+    <h4>Apna mood set karo</h4>
+    <div class="mood-grid">
+      <div class="mood-item" onclick="setMood('😊','Khush')"><span>😊</span><span>Khush</span></div>
+      <div class="mood-item" onclick="setMood('😍','Love')"><span>😍</span><span>Love</span></div>
+      <div class="mood-item" onclick="setMood('😢','Udaas')"><span>😢</span><span>Udaas</span></div>
+      <div class="mood-item" onclick="setMood('😴','Neend')"><span>😴</span><span>Neend</span></div>
+      <div class="mood-item" onclick="setMood('😤','Gussa')"><span>😤</span><span>Gussa</span></div>
+      <div class="mood-item" onclick="setMood('🥰','Pyaar')"><span>🥰</span><span>Pyaar</span></div>
+      <div class="mood-item" onclick="setMood('😎','Cool')"><span>😎</span><span>Cool</span></div>
+      <div class="mood-item" onclick="setMood('🤒','Bimaar')"><span>🤒</span><span>Bimaar</span></div>
+      <div class="mood-item" onclick="setMood('🤩','Excited')"><span>🤩</span><span>Excited</span></div>
+      <div class="mood-item" onclick="setMood('😇','Shant')"><span>😇</span><span>Shant</span></div>
+      <div class="mood-item" onclick="setMood('🥺','Plz')"><span>🥺</span><span>Plz</span></div>
+      <div class="mood-item" onclick="setMood('','Clear')"><span>❌</span><span>Clear</span></div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, set, onDisconnect, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, set, onDisconnect, get, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJzOSIZfY1OBS372rzZK3NNO4W3VXV6GU",
@@ -159,64 +286,65 @@ const db = getDatabase(app);
 
 let myName = '';
 let typingTimeout;
+let selectedMsgKey = null;
+let replyTo = null;
+let lastMsgCount = 0;
 const ADMIN_PASS = 'rplove';
 
-// Compress image to base64 (max 800px, quality 0.6)
-function compressImage(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX = 800;
-        let w = img.width, h = img.height;
-        if (w > h && w > MAX) { h = h * MAX / w; w = MAX; }
-        else if (h > MAX) { w = w * MAX / h; h = MAX; }
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.6));
-      };
-      img.onerror = reject;
-      img.src = e.target.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+// EMOJIS
+const EMOJIS = ['😊','😂','😍','🥰','😘','😎','🤩','😴','😢','😤','🥺','😇','❤️','🔥','💕','✨','👍','👏','🙏','💯','😋','🤭','😏','🫶','💖','💗','💓','💞','🌹','🌸','🫠','🤗'];
+const emojiGrid = document.getElementById('emojiGrid');
+EMOJIS.forEach(e => {
+  const btn = document.createElement('button');
+  btn.className = 'ep-btn';
+  btn.textContent = e;
+  btn.onclick = () => {
+    document.getElementById('msgInput').value += e;
+    document.getElementById('msgInput').focus();
+  };
+  emojiGrid.appendChild(btn);
+});
+
+// NOTIFICATION SOUND
+function playNotif() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(); osc.stop(ctx.currentTime + 0.3);
+  } catch(e) {}
 }
 
 window.enterChat = () => {
   const name = document.getElementById('customName').value.trim();
   if (!name) { showToast('Naam toh likho!'); return; }
   myName = name;
-
   const pw = document.getElementById('adminPw').value.trim();
-  if (pw === ADMIN_PASS) {
-    document.getElementById('clearBtn').style.display = 'block';
-  }
-
+  if (pw === ADMIN_PASS) document.getElementById('clearBtn').style.display = 'block';
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('chatScreen').style.display = 'flex';
-
   initPresence();
   loadMessages();
   setupInput();
+  watchMood();
+  watchPinned();
 };
 
 function initPresence() {
-  const presRef = ref(db, `chat/presence/${myName}`);
+  const presRef = ref(db, 'chat/presence/' + myName);
   set(presRef, { online: true, name: myName });
   onDisconnect(presRef).set({ online: false, name: myName });
-
   onValue(ref(db, 'chat/presence'), snap => {
     const data = snap.val() || {};
     const others = Object.values(data).filter(u => u.name !== myName);
     const badge = document.getElementById('onlineStatus');
     const avatar = document.getElementById('headerAvatar');
     const hName = document.getElementById('headerName');
-
     if (others.length > 0) {
       const other = others[0];
       hName.textContent = other.name;
@@ -237,83 +365,104 @@ function loadMessages() {
     const box = document.getElementById('messagesBox');
     const empty = document.getElementById('emptyState');
     const data = snap.val();
-
-    if (!data) { empty.style.display = 'flex'; return; }
+    if (!data) { empty.style.display = 'flex'; lastMsgCount = 0; return; }
     empty.style.display = 'none';
     box.querySelectorAll('.msg-wrap,.date-div').forEach(el => el.remove());
+    const msgs = Object.entries(data).sort((a,b) => a[1].ts - b[1].ts);
+    
+    // Notification for new messages
+    if (lastMsgCount > 0 && msgs.length > lastMsgCount) {
+      const newest = msgs[msgs.length-1][1];
+      if (newest.name !== myName) playNotif();
+    }
+    lastMsgCount = msgs.length;
 
-    const msgs = Object.entries(data).sort((a, b) => a[1].ts - b[1].ts);
     let lastDate = '';
-
     msgs.forEach(([key, msg]) => {
       const d = new Date(msg.ts || Date.now());
-      const dateStr = d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
-
+      const dateStr = d.toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
       if (dateStr !== lastDate) {
         lastDate = dateStr;
         const div = document.createElement('div');
-        div.className = 'date-div';
-        div.textContent = dateStr;
+        div.className = 'date-div'; div.textContent = dateStr;
         box.appendChild(div);
       }
-
       const wrap = document.createElement('div');
-      wrap.className = `msg-wrap ${msg.name === myName ? 'sent' : 'recv'}`;
+      wrap.className = 'msg-wrap ' + (msg.name === myName ? 'sent' : 'recv');
+      wrap.dataset.key = key;
 
-      const time = d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+      // Long press to open context menu
+      let pressTimer;
+      wrap.addEventListener('touchstart', () => { pressTimer = setTimeout(() => openContextMenu(key, msg, wrap), 500); });
+      wrap.addEventListener('touchend', () => clearTimeout(pressTimer));
+      wrap.addEventListener('touchmove', () => clearTimeout(pressTimer));
+      wrap.addEventListener('contextmenu', e => { e.preventDefault(); openContextMenu(key, msg, wrap); });
 
       if (msg.name !== myName) {
         const nameEl = document.createElement('div');
-        nameEl.className = 'msg-name';
-        nameEl.textContent = msg.name;
+        nameEl.className = 'msg-name'; nameEl.textContent = msg.name;
         wrap.appendChild(nameEl);
       }
 
       const bubble = document.createElement('div');
 
+      // Reply preview
+      if (msg.replyTo) {
+        const rp = document.createElement('div');
+        rp.className = 'reply-preview';
+        rp.innerHTML = '<strong>' + (msg.replyTo.name || '') + '</strong>' + (msg.replyTo.text || '📷 Photo');
+        bubble.appendChild(rp);
+      }
+
       if (msg.type === 'photo') {
         bubble.className = 'msg-bubble photo-bubble';
         const img = document.createElement('img');
-        img.className = 'msg-photo';
-        img.src = msg.data; // base64 data
-        img.loading = 'lazy';
-        img.onclick = () => {
-          document.getElementById('overlayImg').src = msg.data;
-          document.getElementById('photoOverlay').classList.add('show');
-        };
+        img.className = 'msg-photo'; img.src = msg.data; img.loading = 'lazy';
+        img.onclick = () => { document.getElementById('overlayImg').src = msg.data; document.getElementById('photoOverlay').classList.add('show'); };
         bubble.appendChild(img);
       } else {
         bubble.className = 'msg-bubble';
-        bubble.textContent = msg.text;
+        const textNode = document.createTextNode(msg.text || '');
+        bubble.appendChild(textNode);
       }
-
       wrap.appendChild(bubble);
 
+      // Reactions
+      if (msg.reactions && Object.keys(msg.reactions).length > 0) {
+        const reactRow = document.createElement('div');
+        reactRow.className = 'reactions';
+        const counts = {};
+        Object.values(msg.reactions).forEach(r => { counts[r] = (counts[r]||0)+1; });
+        Object.entries(counts).forEach(([emoji, count]) => {
+          const badge = document.createElement('div');
+          badge.className = 'reaction-badge';
+          badge.textContent = emoji + (count > 1 ? ' '+count : '');
+          badge.onclick = () => addReactionToKey(key, emoji);
+          reactRow.appendChild(badge);
+        });
+        wrap.appendChild(reactRow);
+      }
+
+      const time = d.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',hour12:true});
       const meta = document.createElement('div');
       meta.className = 'msg-meta';
-
       const timeSpan = document.createElement('span');
       timeSpan.textContent = time;
       meta.appendChild(timeSpan);
-
-      // Tick for sent messages
       if (msg.name === myName) {
         const tick = document.createElement('span');
         tick.className = msg.seen ? 'tick delivered' : 'tick';
         tick.textContent = msg.seen ? '✓✓' : '✓';
         meta.appendChild(tick);
       }
-
       wrap.appendChild(meta);
-
       box.appendChild(wrap);
     });
-
     box.scrollTop = box.scrollHeight;
 
-    // Mark received messages as read (only if page is visible/active)
-    if (myName && !document.hidden) {
-      Object.entries(data).forEach(([key, msg]) => {
+    // Mark received as seen if page visible
+    if (!document.hidden) {
+      msgs.forEach(([key, msg]) => {
         if (msg.name !== myName && !msg.seen) {
           set(ref(db, 'chat/messages/' + key + '/seen'), true);
         }
@@ -322,72 +471,211 @@ function loadMessages() {
   });
 }
 
+// SEND
 window.sendMessage = () => {
   const input = document.getElementById('msgInput');
   const text = input.value.trim();
   if (!text) return;
-  push(ref(db, 'chat/messages'), { name: myName, text, type: 'text', ts: Date.now() });
-  input.value = '';
-  input.style.height = 'auto';
+  const msgData = { name: myName, text, type: 'text', ts: Date.now() };
+  if (replyTo) { msgData.replyTo = replyTo; cancelReply(); }
+  push(ref(db, 'chat/messages'), msgData);
+  input.value = ''; input.style.height = 'auto';
   clearTyping();
 };
 
-// Photo via base64 in Realtime DB
-document.getElementById('fileInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+// PHOTO
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 800; let w = img.width, h = img.height;
+        if (w > h && w > MAX) { h = h*MAX/w; w = MAX; } else if (h > MAX) { w = w*MAX/h; h = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = reject; img.src = e.target.result;
+    };
+    reader.onerror = reject; reader.readAsDataURL(file);
+  });
+}
 
-  if (file.size > 10 * 1024 * 1024) { showToast('Max 10MB photo select karo!'); return; }
-
-  const bar = document.getElementById('uploadBar');
-  bar.style.display = 'block';
-
+document.getElementById('fileInput').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  if (file.size > 10*1024*1024) { showToast('Max 10MB!'); return; }
+  document.getElementById('uploadBar').style.display = 'block';
   try {
     const base64 = await compressImage(file);
-    await push(ref(db, 'chat/messages'), {
-      name: myName,
-      data: base64,
-      type: 'photo',
-      ts: Date.now()
-    });
+    const msgData = { name: myName, data: base64, type: 'photo', ts: Date.now() };
+    if (replyTo) { msgData.replyTo = replyTo; cancelReply(); }
+    await push(ref(db, 'chat/messages'), msgData);
     showToast('Photo bhej di! 📸');
-  } catch (err) {
-    showToast('Photo error, dobara try karo');
-    console.error(err);
-  } finally {
-    bar.style.display = 'none';
-    e.target.value = '';
-  }
+  } catch { showToast('Error, try again'); }
+  finally { document.getElementById('uploadBar').style.display = 'none'; e.target.value = ''; }
 });
 
-window.clearMyMessages = async () => {
-  if (!confirm('Last 10 minute ke apne saare messages delete karein?')) return;
-  const cutoff = Date.now() - 10 * 60 * 1000;
-  try {
-    const snap = await get(ref(db, 'chat/messages'));
-    const data = snap.val();
-    if (!data) { showToast('Koi message nahi!'); return; }
-    let count = 0;
-    const dels = [];
-    Object.entries(data).forEach(([key, msg]) => {
-      if (msg.name === myName && msg.ts >= cutoff) {
-        dels.push(remove(ref(db, `chat/messages/${key}`)));
-        count++;
-      }
-    });
-    await Promise.all(dels);
-    showToast(count > 0 ? `${count} messages delete ho gaye!` : 'Last 10 min mein koi message nahi tha');
-  } catch (err) {
-    showToast('Error, dobara try karo');
+// CONTEXT MENU
+function openContextMenu(key, msg, wrap) {
+  selectedMsgKey = key;
+  selectedMsg = msg;
+  const menu = document.getElementById('contextMenu');
+  const rect = wrap.getBoundingClientRect();
+  document.getElementById('ctxDeleteItem').style.display = (msg.name === myName) ? 'flex' : 'none';
+  menu.style.top = (rect.top > 200 ? rect.top - 180 : rect.bottom + 8) + 'px';
+  menu.style.left = (msg.name === myName ? rect.right - 170 : rect.left) + 'px';
+  menu.classList.add('show');
+}
+
+let selectedMsg = null;
+document.addEventListener('click', e => {
+  if (!document.getElementById('contextMenu').contains(e.target)) document.getElementById('contextMenu').classList.remove('show');
+  if (!document.getElementById('reactionPicker').contains(e.target)) document.getElementById('reactionPicker').classList.remove('show');
+});
+
+window.ctxReply = () => {
+  document.getElementById('contextMenu').classList.remove('show');
+  if (!selectedMsg) return;
+  replyTo = { name: selectedMsg.name, text: selectedMsg.text || '📷 Photo', key: selectedMsgKey };
+  document.getElementById('replyName').textContent = selectedMsg.name;
+  document.getElementById('replyText').textContent = selectedMsg.text || '📷 Photo';
+  document.getElementById('replyBar').classList.add('show');
+  document.getElementById('msgInput').focus();
+};
+
+window.ctxReact = () => {
+  document.getElementById('contextMenu').classList.remove('show');
+  const picker = document.getElementById('reactionPicker');
+  const menu = document.getElementById('contextMenu');
+  picker.style.top = (parseInt(menu.style.top) || 200) + 'px';
+  picker.style.left = (parseInt(menu.style.left) || 100) + 'px';
+  picker.classList.add('show');
+};
+
+window.ctxPin = () => {
+  document.getElementById('contextMenu').classList.remove('show');
+  if (!selectedMsg) return;
+  set(ref(db, 'chat/pinned'), { text: selectedMsg.text || '📷 Photo', key: selectedMsgKey, by: myName });
+  showToast('📌 Message pin ho gaya!');
+};
+
+window.ctxCopy = () => {
+  document.getElementById('contextMenu').classList.remove('show');
+  if (selectedMsg && selectedMsg.text) {
+    navigator.clipboard.writeText(selectedMsg.text).then(() => showToast('Copied!')).catch(() => showToast('Copy nahi hua'));
   }
 };
 
+window.ctxDelete = () => {
+  document.getElementById('contextMenu').classList.remove('show');
+  if (selectedMsg && selectedMsg.name === myName) {
+    remove(ref(db, 'chat/messages/' + selectedMsgKey));
+    showToast('Message delete ho gaya');
+  }
+};
+
+// REACTIONS
+window.addReaction = (emoji) => {
+  document.getElementById('reactionPicker').classList.remove('show');
+  if (!selectedMsgKey) return;
+  addReactionToKey(selectedMsgKey, emoji);
+};
+
+window.addReactionToKey = (key, emoji) => {
+  set(ref(db, 'chat/messages/' + key + '/reactions/' + myName), emoji);
+};
+
+// REPLY
+window.cancelReply = () => {
+  replyTo = null;
+  document.getElementById('replyBar').classList.remove('show');
+};
+
+// PINNED
+function watchPinned() {
+  onValue(ref(db, 'chat/pinned'), snap => {
+    const data = snap.val();
+    const bar = document.getElementById('pinnedBar');
+    if (data && data.text) {
+      document.getElementById('pinnedText').textContent = data.text;
+      bar.style.display = 'block';
+    } else {
+      bar.style.display = 'none';
+    }
+  });
+}
+
+window.scrollToPinned = () => {
+  get(ref(db, 'chat/pinned')).then(snap => {
+    const data = snap.val();
+    if (data && data.key) {
+      const el = document.querySelector('[data-key="' + data.key + '"]');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+};
+
+// MOOD
+window.openMoodPicker = () => document.getElementById('moodPicker').classList.add('show');
+window.closeMoodPicker = (e) => { if (e.target === document.getElementById('moodPicker')) document.getElementById('moodPicker').classList.remove('show'); };
+
+window.setMood = (emoji, label) => {
+  document.getElementById('moodPicker').classList.remove('show');
+  document.getElementById('moodEmoji').textContent = emoji || '😶';
+  if (emoji) {
+    set(ref(db, 'chat/mood/' + myName), { emoji, label, name: myName });
+    showToast('Mood set: ' + emoji + ' ' + label);
+  } else {
+    remove(ref(db, 'chat/mood/' + myName));
+  }
+};
+
+function watchMood() {
+  onValue(ref(db, 'chat/mood'), snap => {
+    const data = snap.val() || {};
+    const others = Object.values(data).filter(m => m.name !== myName);
+    const bar = document.getElementById('moodBar');
+    if (others.length > 0) {
+      bar.style.display = 'block';
+      bar.textContent = others[0].name + ' ka mood: ' + others[0].emoji + ' ' + others[0].label;
+    } else {
+      bar.style.display = 'none';
+    }
+    // Update my mood emoji in header
+    const myMood = data[myName];
+    if (myMood) document.getElementById('moodEmoji').textContent = myMood.emoji;
+  });
+}
+
+// EMOJI PANEL
+window.toggleEmojiPanel = () => {
+  document.getElementById('emojiPanel').classList.toggle('show');
+};
+
+// CLEAR MY MESSAGES
+window.clearMyMessages = async () => {
+  if (!confirm('Last 10 minute ke apne messages delete karein?')) return;
+  const cutoff = Date.now() - 10*60*1000;
+  const snap = await get(ref(db, 'chat/messages'));
+  const data = snap.val(); if (!data) { showToast('Koi message nahi!'); return; }
+  let count = 0;
+  const dels = [];
+  Object.entries(data).forEach(([key, msg]) => {
+    if (msg.name === myName && msg.ts >= cutoff) { dels.push(remove(ref(db, 'chat/messages/'+key))); count++; }
+  });
+  await Promise.all(dels);
+  showToast(count > 0 ? count + ' messages delete ho gaye!' : 'Last 10 min mein koi nahi tha');
+};
+
+// TYPING
 function setupInput() {
   const input = document.getElementById('msgInput');
   input.addEventListener('input', () => {
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 100) + 'px';
-    set(ref(db, `chat/typing/${myName}`), { typing: true });
+    set(ref(db, 'chat/typing/' + myName), { typing: true });
     clearTimeout(typingTimeout);
     typingTimeout = setTimeout(clearTyping, 2000);
   });
@@ -396,46 +684,33 @@ function setupInput() {
   });
   onValue(ref(db, 'chat/typing'), snap => {
     const data = snap.val() || {};
-    const others = Object.entries(data).filter(([k, v]) => k !== myName && v.typing);
-    document.getElementById('typingIndicator').textContent =
-      others.length > 0 ? `${others[0][0]} likh raha/rahi hai...` : '';
+    const others = Object.entries(data).filter(([k,v]) => k !== myName && v.typing);
+    document.getElementById('typingIndicator').textContent = others.length > 0 ? others[0][0] + ' likh raha/rahi hai...' : '';
   });
 }
 
-function clearTyping() {
-  if (myName) set(ref(db, `chat/typing/${myName}`), { typing: false });
-}
+function clearTyping() { if (myName) set(ref(db, 'chat/typing/'+myName), { typing: false }); }
 
 window.showToast = (msg) => {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 };
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && myName) {
-    clearTyping();
-  } else if (!document.hidden && myName) {
-    // Page became visible — mark all received messages as seen
+  if (document.hidden && myName) { clearTyping(); }
+  else if (!document.hidden && myName) {
     get(ref(db, 'chat/messages')).then(snap => {
-      const data = snap.val();
-      if (!data) return;
+      const data = snap.val(); if (!data) return;
       Object.entries(data).forEach(([key, msg]) => {
-        if (msg.name !== myName && !msg.seen) {
-          set(ref(db, 'chat/messages/' + key + '/seen'), true);
-        }
+        if (msg.name !== myName && !msg.seen) set(ref(db, 'chat/messages/'+key+'/seen'), true);
       });
     });
   }
 });
 
-document.getElementById('customName').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('adminPw').focus();
-});
-document.getElementById('adminPw').addEventListener('keydown', e => {
-  if (e.key === 'Enter') window.enterChat();
-});
+document.getElementById('customName').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('adminPw').focus(); });
+document.getElementById('adminPw').addEventListener('keydown', e => { if (e.key==='Enter') window.enterChat(); });
 </script>
 </body>
 </html>
