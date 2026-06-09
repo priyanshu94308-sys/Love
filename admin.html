@@ -8,8 +8,6 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { background:#111b21; color:#e9edef; font-family:'DM Sans',sans-serif; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
-
-  /* LOGIN */
   #loginBox { width:100%; max-width:320px; text-align:center; }
   .admin-icon { width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#e8547a,#a02050); display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 20px; }
   h2 { font-size:1.4rem; font-weight:600; margin-bottom:6px; }
@@ -17,34 +15,25 @@
   .inp { background:#2a3942; border:1.5px solid #2a3942; color:#e9edef; padding:14px 16px; border-radius:10px; font-size:0.95rem; font-family:'DM Sans',sans-serif; width:100%; margin-bottom:12px; outline:none; transition:border-color 0.2s; }
   .inp:focus { border-color:#e8547a; }
   .inp::placeholder { color:#8696a0; }
-  .btn { border:none; padding:14px; border-radius:10px; font-size:0.95rem; font-family:'DM Sans',sans-serif; font-weight:500; width:100%; cursor:pointer; transition:opacity 0.2s; }
+  .btn { border:none; padding:14px; border-radius:10px; font-size:0.95rem; font-family:'DM Sans',sans-serif; font-weight:500; width:100%; cursor:pointer; }
   .btn:active { opacity:0.8; }
   .btn-primary { background:#e8547a; color:white; }
   .btn-danger { background:#c0392b; color:white; }
   .btn-warning { background:#e67e22; color:white; }
   .btn-info { background:#2a3942; color:#e9edef; border:1px solid #3d4f5a; }
-
-  /* PANEL */
   #adminPanel { display:none; width:100%; max-width:380px; }
-  .panel-header { text-align:center; margin-bottom:28px; }
-  .panel-header h2 { font-size:1.3rem; }
+  .panel-header { text-align:center; margin-bottom:24px; }
   .panel-header p { color:#8696a0; font-size:0.8rem; margin-top:4px; }
-
   .stats-box { background:#202c33; border-radius:12px; padding:16px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .stat { text-align:center; }
   .stat-num { font-size:1.8rem; font-weight:700; color:#e8547a; }
   .stat-label { font-size:0.72rem; color:#8696a0; margin-top:2px; }
-
   .actions { display:flex; flex-direction:column; gap:10px; }
   .action-card { background:#202c33; border-radius:12px; padding:16px; }
   .action-card h4 { font-size:0.88rem; font-weight:600; margin-bottom:4px; }
   .action-card p { font-size:0.75rem; color:#8696a0; margin-bottom:12px; }
-
   .logout-btn { background:none; border:none; color:#8696a0; font-size:0.8rem; font-family:'DM Sans',sans-serif; cursor:pointer; margin-top:20px; display:block; width:100%; text-align:center; padding:8px; }
-  .logout-btn:hover { color:#e9edef; }
-
-  /* CONFIRM MODAL */
-  #modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center; padding:24px; }
+  #modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:200; align-items:center; justify-content:center; padding:24px; }
   #modal.show { display:flex; }
   .modal-box { background:#202c33; border-radius:16px; padding:24px; width:100%; max-width:300px; text-align:center; }
   .modal-box .warn { font-size:2.5rem; margin-bottom:12px; }
@@ -54,79 +43,60 @@
   .modal-btns button { flex:1; padding:12px; border-radius:10px; border:none; font-family:'DM Sans',sans-serif; font-weight:500; cursor:pointer; font-size:0.9rem; }
   .modal-cancel { background:#2a3942; color:#e9edef; }
   .modal-confirm { background:#c0392b; color:white; }
-
   .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(10px); background:#202c33; color:#e9edef; padding:10px 20px; border-radius:20px; font-size:0.82rem; opacity:0; transition:all 0.25s; z-index:999; border:1px solid #2a3942; white-space:nowrap; }
   .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .loading { opacity:0.6; pointer-events:none; }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginBox">
   <div class="admin-icon">🛡️</div>
   <h2>Admin Panel</h2>
   <p class="sub">Sirf admin ke liye</p>
-  <input type="password" class="inp" id="pwInput" placeholder="Password..." autofocus>
-  <button class="btn btn-primary" onclick="adminLogin()">Login →</button>
+  <input type="password" class="inp" id="pwInput" placeholder="Password...">
+  <button class="btn btn-primary" id="loginBtn" onclick="adminLogin()">Login →</button>
 </div>
 
-<!-- PANEL -->
 <div id="adminPanel">
   <div class="panel-header">
     <div class="admin-icon" style="margin-bottom:12px;">🛡️</div>
     <h2>Admin Panel</h2>
-    <p id="lastRefresh">Refreshing...</p>
+    <p id="lastRefresh">Loading...</p>
   </div>
 
   <div class="stats-box">
-    <div class="stat">
-      <div class="stat-num" id="msgCount">-</div>
-      <div class="stat-label">Total Messages</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num" id="onlineCount">-</div>
-      <div class="stat-label">Online Users</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num" id="photoCount">-</div>
-      <div class="stat-label">Photos</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num" id="textCount">-</div>
-      <div class="stat-label">Text Msgs</div>
-    </div>
+    <div class="stat"><div class="stat-num" id="msgCount">-</div><div class="stat-label">Total Messages</div></div>
+    <div class="stat"><div class="stat-num" id="onlineCount">-</div><div class="stat-label">Online Users</div></div>
+    <div class="stat"><div class="stat-num" id="photoCount">-</div><div class="stat-label">Photos</div></div>
+    <div class="stat"><div class="stat-num" id="textCount">-</div><div class="stat-label">Text Msgs</div></div>
   </div>
 
   <div class="actions">
     <div class="action-card">
       <h4>🗑️ Saare Messages Delete</h4>
-      <p>Firebase se chat/messages ka pura data khatam ho jaayega</p>
+      <p>Poori chat history ek click mein khatam</p>
       <button class="btn btn-danger" onclick="showModal('all')">Sab Delete Karo</button>
     </div>
-
     <div class="action-card">
       <h4>📷 Sirf Photos Delete</h4>
-      <p>Sirf photo messages delete honge, text rahenge</p>
+      <p>Sirf photo messages delete honge</p>
       <button class="btn btn-warning" onclick="showModal('photos')">Photos Delete Karo</button>
     </div>
-
     <div class="action-card">
       <h4>👤 Presence Reset</h4>
-      <p>Sabko offline mark karo (ghost users hataao)</p>
+      <p>Sabko offline mark karo</p>
       <button class="btn btn-info" onclick="showModal('presence')">Presence Reset</button>
     </div>
-
     <div class="action-card">
       <h4>💣 Poora Database Wipe</h4>
-      <p>Messages + Presence + Typing — sab kuch delete</p>
+      <p>Messages + Presence + Typing — bilkul sab kuch</p>
       <button class="btn btn-danger" onclick="showModal('nuke')" style="background:#7b0000;">NUKE Everything</button>
     </div>
   </div>
-
   <button class="logout-btn" onclick="logout()">← Logout</button>
 </div>
 
-<!-- MODAL -->
 <div id="modal">
   <div class="modal-box">
     <div class="warn" id="modalIcon">⚠️</div>
@@ -134,17 +104,17 @@
     <p id="modalDesc">Yeh action undo nahi hoga!</p>
     <div class="modal-btns">
       <button class="modal-cancel" onclick="closeModal()">Cancel</button>
-      <button class="modal-confirm" id="modalConfirmBtn" onclick="doAction()">Haan, Delete</button>
+      <button class="modal-confirm" onclick="doAction()">Haan, Karo</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+<!-- Firebase SDK CDN - NON-MODULE for simplicity -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyCJzOSIZfY1OBS372rzZK3NNO4W3VXV6GU",
   authDomain: "rplove-d8469.firebaseapp.com",
@@ -155,109 +125,110 @@ const firebaseConfig = {
   appId: "1:557495378550:web:9262d90aa39a2463c0b557"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 const PASS = 'rplove';
 let currentAction = '';
 
-// LOGIN
-window.adminLogin = () => {
+function adminLogin() {
   const pw = document.getElementById('pwInput').value.trim();
-  if (pw !== PASS) { showToast('Wrong password!'); return; }
+  if (pw !== PASS) { showToast('❌ Wrong password!'); return; }
   document.getElementById('loginBox').style.display = 'none';
   document.getElementById('adminPanel').style.display = 'block';
   loadStats();
-};
+}
 
-document.getElementById('pwInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') window.adminLogin();
+document.getElementById('pwInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') adminLogin();
 });
 
-// STATS
 function loadStats() {
-  // Messages
-  onValue(ref(db, 'chat/messages'), snap => {
+  db.ref('chat/messages').on('value', function(snap) {
     const data = snap.val() || {};
     const msgs = Object.values(data);
     document.getElementById('msgCount').textContent = msgs.length;
     document.getElementById('photoCount').textContent = msgs.filter(m => m.type === 'photo').length;
     document.getElementById('textCount').textContent = msgs.filter(m => m.type === 'text').length;
-    document.getElementById('lastRefresh').textContent = 'Last refresh: ' + new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+    document.getElementById('lastRefresh').textContent = 'Updated: ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true});
   });
 
-  // Online users
-  onValue(ref(db, 'chat/presence'), snap => {
+  db.ref('chat/presence').on('value', function(snap) {
     const data = snap.val() || {};
     const online = Object.values(data).filter(u => u.online).length;
     document.getElementById('onlineCount').textContent = online;
   });
 }
 
-// MODAL
 const modalConfigs = {
-  all:      { icon:'🗑️', title:'Saare messages delete?', desc:'Chat history poori khatam ho jaayegi. Undo nahi hoga!', btn:'Haan, Delete Karo' },
-  photos:   { icon:'📷', title:'Saari photos delete?', desc:'Sirf photo messages delete honge.', btn:'Photos Delete' },
-  presence: { icon:'👤', title:'Presence reset karein?', desc:'Sabko offline mark ho jaayega.', btn:'Reset Karo' },
-  nuke:     { icon:'💣', title:'POORA DATABASE WIPE?', desc:'Messages, presence, typing — sab kuch! Bilkul sure ho?', btn:'NUKE KAR DO' },
+  all:      { icon:'🗑️', title:'Saare messages delete?', desc:'Poori chat khatam ho jaayegi!', btn:'Delete Karo' },
+  photos:   { icon:'📷', title:'Saari photos delete?', desc:'Sirf photo messages hatenge.', btn:'Photos Hatao' },
+  presence: { icon:'👤', title:'Presence reset?', desc:'Sab offline ho jaayenge.', btn:'Reset Karo' },
+  nuke:     { icon:'💣', title:'POORA DATABASE WIPE?', desc:'Sab kuch permanently khatam!', btn:'NUKE KAR DO' },
 };
 
-window.showModal = (action) => {
+function showModal(action) {
   currentAction = action;
   const cfg = modalConfigs[action];
   document.getElementById('modalIcon').textContent = cfg.icon;
   document.getElementById('modalTitle').textContent = cfg.title;
   document.getElementById('modalDesc').textContent = cfg.desc;
-  document.getElementById('modalConfirmBtn').textContent = cfg.btn;
   document.getElementById('modal').classList.add('show');
-};
+}
 
-window.closeModal = () => {
+function closeModal() {
   document.getElementById('modal').classList.remove('show');
   currentAction = '';
-};
+}
 
-window.doAction = async () => {
+function doAction() {
   closeModal();
-  try {
-    if (currentAction === 'all') {
-      await remove(ref(db, 'chat/messages'));
-      showToast('Saare messages delete ho gaye!');
-    } else if (currentAction === 'photos') {
-      // Read and delete only photos
-      const { get } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
-      const snap = await get(ref(db, 'chat/messages'));
+
+  if (currentAction === 'all') {
+    db.ref('chat/messages').remove()
+      .then(() => showToast('✅ Saare messages delete ho gaye!'))
+      .catch(err => showToast('❌ Error: ' + err.message));
+
+  } else if (currentAction === 'photos') {
+    db.ref('chat/messages').once('value', function(snap) {
       const data = snap.val();
       if (!data) { showToast('Koi message nahi!'); return; }
-      const dels = Object.entries(data)
-        .filter(([k, v]) => v.type === 'photo')
-        .map(([k]) => remove(ref(db, `chat/messages/${k}`)));
-      await Promise.all(dels);
-      showToast(`${dels.length} photos delete ho gayi!`);
-    } else if (currentAction === 'presence') {
-      await remove(ref(db, 'chat/presence'));
-      await remove(ref(db, 'chat/typing'));
-      showToast('Presence reset ho gaya!');
-    } else if (currentAction === 'nuke') {
-      await remove(ref(db, 'chat'));
-      showToast('💣 Poora database wipe ho gaya!');
-    }
-  } catch (err) {
-    showToast('Error: ' + err.message);
-  }
-};
+      const updates = {};
+      let count = 0;
+      Object.entries(data).forEach(([key, msg]) => {
+        if (msg.type === 'photo') { updates['chat/messages/' + key] = null; count++; }
+      });
+      if (count === 0) { showToast('Koi photo nahi!'); return; }
+      db.ref().update(updates)
+        .then(() => showToast('✅ ' + count + ' photos delete ho gayi!'))
+        .catch(err => showToast('❌ Error: ' + err.message));
+    });
 
-window.logout = () => {
+  } else if (currentAction === 'presence') {
+    const updates = { 'chat/presence': null, 'chat/typing': null };
+    db.ref().update(updates)
+      .then(() => showToast('✅ Presence reset ho gaya!'))
+      .catch(err => showToast('❌ Error: ' + err.message));
+
+  } else if (currentAction === 'nuke') {
+    db.ref('chat').remove()
+      .then(() => showToast('💣 Poora database wipe ho gaya!'))
+      .catch(err => showToast('❌ Error: ' + err.message));
+  }
+}
+
+function logout() {
   document.getElementById('adminPanel').style.display = 'none';
   document.getElementById('loginBox').style.display = 'block';
   document.getElementById('pwInput').value = '';
-};
+}
 
-window.showToast = (msg) => {
+function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
-};
+}
 </script>
 </body>
 </html>
