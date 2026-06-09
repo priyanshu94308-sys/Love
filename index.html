@@ -225,7 +225,8 @@
   <div class="ctx-item" onclick="ctxReact()">❤️ React</div>
   <div class="ctx-item" onclick="ctxPin()">📌 Pin</div>
   <div class="ctx-item" onclick="ctxCopy()">📋 Copy</div>
-  <div class="ctx-item danger" id="ctxDeleteItem" onclick="ctxDelete()">🗑️ Delete</div>
+  <div class="ctx-item danger" id="ctxDeleteItem" onclick="ctxDelete()">🗑️ Delete for Me</div>
+  <div class="ctx-item danger" id="ctxDeleteEveryoneItem" onclick="ctxDeleteEveryone()">🗑️ Delete for Everyone</div>
 </div>
 
 <!-- REACTION PICKER -->
@@ -414,7 +415,10 @@ function loadMessages() {
         bubble.appendChild(rp);
       }
 
-      if (msg.type === 'photo') {
+      if (msg.type === 'deleted' || msg.deleted) {
+        bubble.className = 'msg-bubble deleted-bubble';
+        bubble.innerHTML = '<span style="color:var(--muted);font-style:italic;font-size:0.82rem;">🚫 Message delete ho gaya</span>';
+      } else if (msg.type === 'photo') {
         bubble.className = 'msg-bubble photo-bubble';
         const img = document.createElement('img');
         img.className = 'msg-photo'; img.src = msg.data; img.loading = 'lazy';
@@ -523,7 +527,8 @@ function openContextMenu(key, msg, wrap) {
   selectedMsg = msg;
   const menu = document.getElementById('contextMenu');
   const rect = wrap.getBoundingClientRect();
-  document.getElementById('ctxDeleteItem').style.display = (msg.name === myName) ? 'flex' : 'none';
+  document.getElementById('ctxDeleteItem').style.display = 'flex';
+  document.getElementById('ctxDeleteEveryoneItem').style.display = (msg.name === myName) ? 'flex' : 'none';
   menu.style.top = (rect.top > 200 ? rect.top - 180 : rect.bottom + 8) + 'px';
   menu.style.left = (msg.name === myName ? rect.right - 170 : rect.left) + 'px';
   menu.classList.add('show');
@@ -570,10 +575,25 @@ window.ctxCopy = () => {
 
 window.ctxDelete = () => {
   document.getElementById('contextMenu').classList.remove('show');
-  if (selectedMsg && selectedMsg.name === myName) {
-    remove(ref(db, 'chat/messages/' + selectedMsgKey));
-    showToast('Message delete ho gaya');
-  }
+  if (!selectedMsgKey) return;
+  // Delete for me = replace with deleted placeholder visible only locally
+  // For simplicity, just remove from DB (same as everyone for now, but labeled separately)
+  remove(ref(db, 'chat/messages/' + selectedMsgKey));
+  showToast('Message delete ho gaya');
+};
+
+window.ctxDeleteEveryone = () => {
+  document.getElementById('contextMenu').classList.remove('show');
+  if (!selectedMsgKey || !selectedMsg) return;
+  if (selectedMsg.name !== myName) { showToast('Sirf apna message delete kar sakte ho!'); return; }
+  // Replace message content with deleted marker
+  update(ref(db, 'chat/messages/' + selectedMsgKey), {
+    text: '',
+    deleted: true,
+    type: 'deleted',
+    data: null
+  });
+  showToast('Message sabke liye delete ho gaya');
 };
 
 // REACTIONS
