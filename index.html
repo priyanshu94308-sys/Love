@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chat</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111b21">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chat">
+<link rel="apple-touch-icon" href="icon.png">
 <style>
   :root {
     --bg: #111b21; --panel: #202c33; --input-bg: #2a3942;
@@ -645,6 +651,15 @@ document.addEventListener('visibilitychange', () => {
 
 document.getElementById('customName').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('adminPw').focus(); });
 document.getElementById('adminPw').addEventListener('keydown', e => { if(e.key==='Enter') window.enterChat(); });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Love/sw.js')
+      .then(() => console.log('SW registered'))
+      .catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
