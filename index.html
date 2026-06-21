@@ -342,13 +342,13 @@ function watchAutoDelete() {
       btn.style.color = data.seconds > 0 ? '#e8547a' : 'var(--muted)';
     }
   });
+  startAutoDeleteInterval();
 }
 
 function checkAutoDelete(msgs) {
   if (autoDeleteSeconds === 0) return;
   const now = Date.now();
   msgs.forEach(([key, msg]) => {
-    // Delete if: seen AND seenAt + timer has passed
     if (msg.seen && msg.seenAt) {
       const deleteAt = msg.seenAt + (autoDeleteSeconds * 1000);
       if (now >= deleteAt) {
@@ -356,6 +356,27 @@ function checkAutoDelete(msgs) {
       }
     }
   });
+}
+
+// Run auto delete check every 10 seconds
+let autoDeleteInterval = null;
+function startAutoDeleteInterval() {
+  if (autoDeleteInterval) clearInterval(autoDeleteInterval);
+  autoDeleteInterval = setInterval(async () => {
+    if (autoDeleteSeconds === 0) return;
+    const snap = await get(ref(db, 'chat/messages'));
+    const data = snap.val();
+    if (!data) return;
+    const now = Date.now();
+    Object.entries(data).forEach(([key, msg]) => {
+      if (msg.seen && msg.seenAt) {
+        const deleteAt = msg.seenAt + (autoDeleteSeconds * 1000);
+        if (now >= deleteAt) {
+          remove(ref(db, 'chat/messages/' + key));
+        }
+      }
+    });
+  }, 10000); // every 10 seconds
 }
 
 // LOGIN
