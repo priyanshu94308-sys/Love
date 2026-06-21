@@ -373,8 +373,9 @@ window.enterChat = () => {
 // PRESENCE
 function initPresence() {
   const pr = ref(db, 'chat/presence/' + myName);
-  set(pr, { online: true, name: myName });
+  // FIX: pehle onDisconnect set karo, phir online mark karo
   onDisconnect(pr).set({ online: false, name: myName });
+  set(pr, { online: true, name: myName });
   onValue(ref(db, 'chat/presence'), snap => {
     const data = snap.val() || {};
     const others = Object.values(data).filter(u => u.name !== myName);
