@@ -32,7 +32,20 @@
   .login-btn:active { opacity:0.85; }
 
   .chat-header { background:var(--panel); padding:10px 16px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid var(--border); }
-  .avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#e8547a,#7b2d42); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; color:white; text-transform:uppercase; flex-shrink:0; }
+  .avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,#e8547a,#7b2d42); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; color:white; text-transform:uppercase; flex-shrink:0; overflow:hidden; cursor:pointer; position:relative; }
+  .avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .avatar-wrap { position:relative; flex-shrink:0; }
+  .avatar-edit { position:absolute; bottom:-2px; right:-2px; width:16px; height:16px; background:#e8547a; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.55rem; color:white; cursor:pointer; z-index:2; }
+  
+  /* Profile pic in messages */
+  .msg-with-avatar { display:flex; align-items:flex-end; gap:6px; }
+  .msg-avatar { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#e8547a,#7b2d42); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; color:white; flex-shrink:0; overflow:hidden; }
+  .msg-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+
+  /* Login pic upload */
+  .pic-upload { width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#e8547a,#a02050); display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 12px; cursor:pointer; overflow:hidden; position:relative; border:3px solid rgba(232,84,122,0.4); }
+  .pic-upload img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+  .pic-upload-hint { font-size:0.72rem; color:var(--muted); margin-bottom:16px; cursor:pointer; }
   .header-info { flex:1; min-width:0; }
   .header-info h3 { font-size:0.97rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .online-dot { font-size:0.7rem; color:var(--online); display:flex; align-items:center; gap:4px; margin-top:2px; }
@@ -140,7 +153,12 @@
 
 <div id="loginScreen">
   <div class="login-box">
-    <div class="login-icon">💬</div>
+    <div class="pic-upload" id="loginPicBtn" onclick="document.getElementById('picInput').click()">
+      <img id="loginPicPreview" src="" alt="" style="display:none;">
+      <span id="loginPicEmoji">💬</span>
+    </div>
+    <input type="file" id="picInput" accept="image/*" style="display:none;">
+    <p class="pic-upload-hint" onclick="document.getElementById('picInput').click()">📷 Tap karo profile pic lagane ke liye</p>
     <h2>Chat</h2>
     <p>Apna naam likho aur shuru karo</p>
     <input type="text" class="login-input" id="customName" placeholder="Naam..." maxlength="20" autofocus>
@@ -151,7 +169,11 @@
 
 <div id="chatScreen" style="display:none;flex-direction:column;height:100dvh;">
   <div class="chat-header">
-    <div class="avatar" id="headerAvatar">?</div>
+    <div class="avatar-wrap">
+      <div class="avatar" id="headerAvatar" onclick="document.getElementById('myPicInput').click()">?</div>
+      <div class="avatar-edit" onclick="document.getElementById('myPicInput').click()">✏️</div>
+      <input type="file" id="myPicInput" accept="image/*" style="display:none;">
+    </div>
     <div class="header-info">
       <h3 id="headerName">Chat</h3>
       <div id="onlineStatus" class="offline-dot">offline</div>
@@ -192,7 +214,7 @@
   <div class="input-area">
     <button class="icon-btn" onclick="toggleEmojiPanel()">😊</button>
     <button class="icon-btn" onclick="document.getElementById('fileInput').click()">📷</button>
-    <input type="file" id="fileInput" accept="image/*">
+    <input type="file" id="fileInput" accept="image/*" style="display:none;">
     <textarea id="msgInput" placeholder="Message..." rows="1"></textarea>
     <button class="send-btn" onclick="sendMessage()">➤</button>
   </div>
@@ -379,6 +401,90 @@ function startAutoDeleteInterval() {
   }, 10000); // every 10 seconds
 }
 
+// PROFILE PIC
+let myPicBase64 = '';
+
+function compressPic(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        const SIZE = 150;
+        c.width = SIZE; c.height = SIZE;
+        const ctx = c.getContext('2d');
+        // Crop to circle square
+        const min = Math.min(img.width, img.height);
+        const sx = (img.width - min) / 2;
+        const sy = (img.height - min) / 2;
+        ctx.drawImage(img, sx, sy, min, min, 0, 0, SIZE, SIZE);
+        res(c.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = rej; img.src = e.target.result;
+    };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+
+// Login screen pic upload
+document.getElementById('picInput').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    myPicBase64 = await compressPic(file);
+    const preview = document.getElementById('loginPicPreview');
+    preview.src = myPicBase64;
+    preview.style.display = 'block';
+    document.getElementById('loginPicEmoji').style.display = 'none';
+  } catch { showToast('Pic load nahi hui'); }
+  e.target.value = '';
+});
+
+// In-chat pic change
+document.getElementById('myPicInput').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    myPicBase64 = await compressPic(file);
+    // Update in Firebase
+    set(ref(db, 'chat/profiles/' + myName), { pic: myPicBase64, name: myName });
+    updateMyAvatar();
+    showToast('Profile pic update ho gayi! 📸');
+  } catch { showToast('Error, try again'); }
+  e.target.value = '';
+});
+
+function updateMyAvatar() {
+  // My avatar shows in header only when other person is not connected
+  // When other is connected, header shows their pic
+  // So save my pic to Firebase and it will show in other's header via watchProfiles
+  const avatar = document.getElementById('headerAvatar');
+  // Check if other person's pic is showing
+  const headerName = document.getElementById('headerName').textContent;
+  if (headerName === 'Waiting...' || headerName === 'Chat') {
+    // No one else connected, show my initial
+    if (!avatar.querySelector('img')) avatar.textContent = myName ? myName.charAt(0).toUpperCase() : '?';
+  }
+}
+
+function watchProfiles() {
+  onValue(ref(db, 'chat/profiles'), snap => {
+    const data = snap.val() || {};
+    // Update other person's avatar in header
+    const others = Object.values(data).filter(p => p.name !== myName);
+    if (others.length > 0 && others[0].pic) {
+      document.getElementById('headerAvatar').innerHTML = '<img src="' + others[0].pic + '" alt="">';
+    }
+    // Update all message avatars
+    document.querySelectorAll('.msg-avatar[data-name]').forEach(el => {
+      const name = el.dataset.name;
+      const profile = data[name];
+      if (profile && profile.pic) {
+        el.innerHTML = '<img src="' + profile.pic + '" alt="">';
+      }
+    });
+  });
+}
+
 // LOGIN
 window.enterChat = () => {
   const name = document.getElementById('customName').value.trim();
@@ -388,15 +494,28 @@ window.enterChat = () => {
     document.getElementById('clearBtn').style.display = 'block';
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('chatScreen').style.display = 'flex';
-  initPresence(); loadMessages(); setupInput(); watchMood(); watchPinned(); watchAutoDelete();
+  // Save profile pic to Firebase
+  if (myPicBase64) {
+    set(ref(db, 'chat/profiles/' + myName), { pic: myPicBase64, name: myName });
+  }
+  updateMyAvatar();
+  initPresence(); loadMessages(); setupInput(); watchMood(); watchPinned(); watchAutoDelete(); watchProfiles();
 };
 
 // PRESENCE
 function initPresence() {
   const pr = ref(db, 'chat/presence/' + myName);
-  // FIX: pehle onDisconnect set karo, phir online mark karo
-  onDisconnect(pr).set({ online: false, name: myName });
-  set(pr, { online: true, name: myName });
+  const connRef = ref(db, '.info/connected');
+
+  // Use .info/connected for reliable online detection
+  onValue(connRef, snap => {
+    if (snap.val() === true) {
+      onDisconnect(pr).set({ online: false, name: myName, lastSeen: Date.now() });
+      set(pr, { online: true, name: myName, lastSeen: Date.now() });
+    }
+  });
+
+  // Watch others presence
   onValue(ref(db, 'chat/presence'), snap => {
     const data = snap.val() || {};
     const others = Object.values(data).filter(u => u.name !== myName);
@@ -404,12 +523,14 @@ function initPresence() {
     if (others.length > 0) {
       const o = others[0];
       document.getElementById('headerName').textContent = o.name;
-      document.getElementById('headerAvatar').textContent = o.name.charAt(0).toUpperCase();
+      const av = document.getElementById('headerAvatar');
+      if (!av.querySelector('img')) av.textContent = o.name.charAt(0).toUpperCase();
       badge.className = o.online ? 'online-dot' : 'offline-dot';
       badge.textContent = o.online ? 'online' : 'last seen recently';
     } else {
       document.getElementById('headerName').textContent = 'Waiting...';
-      document.getElementById('headerAvatar').textContent = '?';
+      const av = document.getElementById('headerAvatar');
+      if (!av.querySelector('img')) av.textContent = '?';
       badge.className = 'offline-dot';
       badge.textContent = 'Link share karo';
     }
@@ -533,7 +654,7 @@ function loadMessages() {
   });
 }
 
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escHtml(s) { if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // SEND
 window.sendMessage = () => {
@@ -745,8 +866,14 @@ window.showToast = msg => {
 };
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { clearTyping(); }
+  if (document.hidden) { 
+    clearTyping();
+    // Pause auto delete interval when page hidden (battery save)
+    if (autoDeleteInterval) { clearInterval(autoDeleteInterval); autoDeleteInterval = null; }
+  }
   else if (myName) {
+    // Restart auto delete interval
+    if (autoDeleteSeconds > 0) startAutoDeleteInterval();
     get(ref(db,'chat/messages')).then(snap => {
       const data = snap.val(); if(!data) return;
       Object.entries(data).forEach(([key,msg]) => {
