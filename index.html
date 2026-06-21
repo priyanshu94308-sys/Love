@@ -78,6 +78,9 @@
   .empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); font-size:0.82rem; gap:8px; text-align:center; }
 
   /* CONTEXT MENU — BUG FIX: always fixed, high z-index */
+  .timer-opt { padding:10px 14px; font-size:0.85rem; cursor:pointer; border-radius:8px; color:#e9edef; }
+  .timer-opt:active { background:rgba(255,255,255,0.08); }
+  .timer-opt.active { color:#e8547a; font-weight:600; }
   #contextMenu { display:none; position:fixed; background:#2a3942; border-radius:12px; padding:6px; z-index:500; box-shadow:0 8px 30px rgba(0,0,0,0.6); min-width:190px; }
   #contextMenu.show { display:block; }
   .ctx-item { padding:11px 14px; font-size:0.85rem; cursor:pointer; border-radius:8px; display:flex; align-items:center; gap:10px; }
@@ -155,6 +158,7 @@
     </div>
     <span class="header-mood" id="moodEmoji" onclick="openMoodPicker()" title="Mood">😶</span>
     <button id="clearBtn" onclick="clearMyMessages()">🗑 Clear</button>
+    <button id="timerBtn" onclick="toggleTimerMenu()" title="Auto delete timer" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;flex-shrink:0;">⏱️</button>
   </div>
 
   <div id="moodBar"></div>
@@ -192,6 +196,18 @@
     <textarea id="msgInput" placeholder="Message..." rows="1"></textarea>
     <button class="send-btn" onclick="sendMessage()">➤</button>
   </div>
+</div>
+
+<!-- TIMER MENU -->
+<div id="timerMenu" style="display:none;position:fixed;top:60px;right:12px;background:#2a3942;border-radius:12px;padding:8px;z-index:500;box-shadow:0 8px 30px rgba(0,0,0,0.6);min-width:200px;">
+  <div style="padding:8px 12px;font-size:0.75rem;color:#8696a0;border-bottom:1px solid #111b21;margin-bottom:4px;">⏱️ Auto Delete Timer</div>
+  <div class="timer-opt" onclick="setTimer(0)">🚫 Off</div>
+  <div class="timer-opt" onclick="setTimer(30)">30 seconds</div>
+  <div class="timer-opt" onclick="setTimer(60)">1 minute</div>
+  <div class="timer-opt" onclick="setTimer(300)">5 minutes</div>
+  <div class="timer-opt" onclick="setTimer(1800)">30 minutes</div>
+  <div class="timer-opt" onclick="setTimer(3600)">1 hour</div>
+  <div class="timer-opt" onclick="setTimer(86400)">24 hours</div>
 </div>
 
 <!-- CONTEXT MENU -->
@@ -280,6 +296,68 @@ function playNotif() {
   } catch(e) {}
 }
 
+// AUTO DELETE TIMER
+let autoDeleteSeconds = 0;
+
+window.toggleTimerMenu = () => {
+  const menu = document.getElementById('timerMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+};
+
+window.setTimer = (seconds) => {
+  autoDeleteSeconds = seconds;
+  document.getElementById('timerMenu').style.display = 'none';
+  
+  // Update active state
+  document.querySelectorAll('.timer-opt').forEach(el => el.classList.remove('active'));
+  
+  // Save to Firebase so both users know
+  if (myName) set(ref(db, 'chat/settings/autoDelete'), { seconds, setBy: myName });
+  
+  const btn = document.getElementById('timerBtn');
+  if (seconds === 0) {
+    btn.textContent = '⏱️';
+    btn.style.color = 'var(--muted)';
+    showToast('Auto delete off');
+  } else {
+    btn.textContent = '⏱️';
+    btn.style.color = '#e8547a';
+    showToast('Auto delete: ' + formatTime(seconds));
+  }
+};
+
+function formatTime(s) {
+  if (s < 60) return s + ' seconds';
+  if (s < 3600) return (s/60) + ' minute';
+  if (s < 86400) return (s/3600) + ' hour';
+  return '24 hours';
+}
+
+function watchAutoDelete() {
+  onValue(ref(db, 'chat/settings/autoDelete'), snap => {
+    const data = snap.val();
+    if (data) {
+      autoDeleteSeconds = data.seconds;
+      const btn = document.getElementById('timerBtn');
+      btn.style.color = data.seconds > 0 ? '#e8547a' : 'var(--muted)';
+    }
+  });
+}
+
+function checkAutoDelete(msgs) {
+  if (autoDeleteSeconds === 0) return;
+  const now = Date.now();
+  msgs.forEach(([key, msg]) => {
+    // Delete if: seen AND seenAt + timer has passed
+    if (msg.seen && msg.seenAt) {
+      const deleteAt = msg.seenAt + (autoDeleteSeconds * 1000);
+      if (now >= deleteAt) {
+        remove(ref(db, 'chat/messages/' + key));
+      }
+    }
+  });
+}
+
 // LOGIN
 window.enterChat = () => {
   const name = document.getElementById('customName').value.trim();
@@ -289,7 +367,7 @@ window.enterChat = () => {
     document.getElementById('clearBtn').style.display = 'block';
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('chatScreen').style.display = 'flex';
-  initPresence(); loadMessages(); setupInput(); watchMood(); watchPinned();
+  initPresence(); loadMessages(); setupInput(); watchMood(); watchPinned(); watchAutoDelete();
 };
 
 // PRESENCE
@@ -420,14 +498,16 @@ function loadMessages() {
 
     box.scrollTop = box.scrollHeight;
 
-    // BUG FIX: mark seen only once per load, only if page visible
+    // Mark seen + seenAt timestamp + check auto delete
     if (!document.hidden) {
       msgs.forEach(([key, msg]) => {
         if (msg.name !== myName && !msg.seen && !msg.deleted) {
-          set(ref(db, 'chat/messages/' + key + '/seen'), true);
+          update(ref(db, 'chat/messages/' + key), { seen: true, seenAt: Date.now() });
         }
       });
     }
+    // Check auto delete
+    checkAutoDelete(msgs);
   });
 }
 
@@ -499,6 +579,11 @@ function openCtx(key, msg, x, y) {
 
 // BUG FIX: close menu on outside tap
 document.addEventListener('touchstart', e => {
+  const timerMenu = document.getElementById('timerMenu');
+  const timerBtn = document.getElementById('timerBtn');
+  if (timerMenu && timerMenu.style.display !== 'none' && !timerMenu.contains(e.target) && !timerBtn.contains(e.target)) {
+    timerMenu.style.display = 'none';
+  }
   const menu = document.getElementById('contextMenu');
   const picker = document.getElementById('reactionPicker');
   if (menu.classList.contains('show') && !menu.contains(e.target)) menu.classList.remove('show');
@@ -643,7 +728,7 @@ document.addEventListener('visibilitychange', () => {
     get(ref(db,'chat/messages')).then(snap => {
       const data = snap.val(); if(!data) return;
       Object.entries(data).forEach(([key,msg]) => {
-        if(msg.name!==myName && !msg.seen && !msg.deleted) set(ref(db,'chat/messages/'+key+'/seen'),true);
+        if(msg.name!==myName && !msg.seen && !msg.deleted) update(ref(db,'chat/messages/'+key), { seen: true, seenAt: Date.now() });
       });
     });
   }
