@@ -21,7 +21,7 @@
   body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
 
   #loginScreen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:100; padding:28px; }
-  .login-box { width:100%; max-width:320px; text-align:center; }
+  .login-box { width:100%; max-width:320px; text-align:center; display:flex; flex-direction:column; gap:0px; }
   .login-icon { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,#e8547a,#a02050); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 16px; }
   .login-box h2 { font-size:1.4rem; font-weight:600; margin-bottom:6px; }
   .login-box p { color:var(--muted); font-size:0.82rem; margin-bottom:24px; }
@@ -42,10 +42,7 @@
   .msg-avatar { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#e8547a,#7b2d42); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; color:white; flex-shrink:0; overflow:hidden; }
   .msg-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
 
-  /* Login pic upload */
-  .pic-upload { width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#e8547a,#a02050); display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 12px; cursor:pointer; overflow:hidden; position:relative; border:3px solid rgba(232,84,122,0.4); }
-  .pic-upload img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
-  .pic-upload-hint { font-size:0.72rem; color:var(--muted); margin-bottom:16px; cursor:pointer; }
+
   .header-info { flex:1; min-width:0; }
   .header-info h3 { font-size:0.97rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .online-dot { font-size:0.7rem; color:var(--online); display:flex; align-items:center; gap:4px; margin-top:2px; }
@@ -156,16 +153,8 @@
 
 <div id="loginScreen">
   <div class="login-box">
-    <div class="pic-upload" id="loginPicBtn" onclick="document.getElementById('picInput').click()">
-      <img id="loginPicPreview" src="" alt="" style="display:none;">
-      <span id="loginPicEmoji">💬</span>
-    </div>
-    <input type="file" id="picInput" accept="image/*" style="display:none;">
-    <p class="pic-upload-hint" onclick="document.getElementById('picInput').click()">📷 Tap karo profile pic lagane ke liye</p>
-    <h2>Chat</h2>
-    <p>Apna naam likho aur shuru karo</p>
     <input type="text" class="login-input" id="customName" placeholder="Naam..." maxlength="20" autofocus>
-    <input type="password" class="login-input" id="adminPw" placeholder="Password (optional)..." maxlength="30">
+    <input type="password" class="login-input" id="adminPw" placeholder="Password..." maxlength="30">
     <button class="login-btn" onclick="enterChat()">Shuru Karo →</button>
   </div>
 </div>
@@ -544,18 +533,7 @@ function compressPic(file) {
   });
 }
 
-// Login screen pic upload
-document.getElementById('picInput').addEventListener('change', async e => {
-  const file = e.target.files[0]; if (!file) return;
-  try {
-    myPicBase64 = await compressPic(file);
-    const preview = document.getElementById('loginPicPreview');
-    preview.src = myPicBase64;
-    preview.style.display = 'block';
-    document.getElementById('loginPicEmoji').style.display = 'none';
-  } catch { showToast('Pic load nahi hui'); }
-  e.target.value = '';
-});
+// Profile pic login upload removed
 
 // In-chat pic change
 document.getElementById('myPicInput').addEventListener('change', async e => {
@@ -603,18 +581,24 @@ function watchProfiles() {
 }
 
 // LOGIN
+const APP_PASS = '1234Qw@#';
+
 window.enterChat = () => {
   const name = document.getElementById('customName').value.trim();
-  if (!name) { showToast('Naam toh likho!'); return; }
+  const pw = document.getElementById('adminPw').value.trim();
+  if (!name) { showToast('Naam likho!'); return; }
+  if (!pw) { showToast('Password likho!'); return; }
+  if (pw !== APP_PASS && pw !== ADMIN_PASS) { 
+    showToast('❌ Wrong password!'); 
+    document.getElementById('adminPw').value = '';
+    return; 
+  }
   myName = name;
-  if (document.getElementById('adminPw').value.trim() === ADMIN_PASS)
-    document.getElementById('clearBtn').style.display = 'block';
+  // Admin gets clear button
+  if (pw === ADMIN_PASS) document.getElementById('clearBtn').style.display = 'block';
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('chatScreen').style.display = 'flex';
-  // Save profile pic to Firebase
-  if (myPicBase64) {
-    set(ref(db, 'chat/profiles/' + myName), { pic: myPicBase64, name: myName });
-  }
+  if (myPicBase64) set(ref(db, 'chat/profiles/' + myName), { pic: myPicBase64, name: myName });
   updateMyAvatar();
   initPresence(); loadMessages(); setupInput(); watchMood(); watchPinned(); watchAutoDelete(); watchProfiles(); watchStatus(); watchCall();
 };
