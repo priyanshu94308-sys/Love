@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#111b21;color:#e9edef;font-family:'DM Sans',sans-serif;height:100dvh;display:flex;flex-direction:column;}
+  .header{background:#202c33;padding:14px 16px;border-bottom:1px solid #2a3942;display:flex;align-items:center;gap:12px;}
+  .header h2{font-size:1rem;font-weight:600;flex:1;}
+  .chats-list{flex:1;overflow-y:auto;}
+  .chat-item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid rgba(42,57,66,0.5);cursor:pointer;position:relative;}
+  .chat-item:active{background:rgba(255,255,255,0.04);}
+  .ci-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#e8547a,#7b2d42);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;color:white;flex-shrink:0;}
+  .ci-info{flex:1;min-width:0;}
+  .ci-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .ci-name{font-size:0.97rem;font-weight:600;}
+  .ci-time{font-size:0.72rem;color:#8696a0;}
+  .ci-msg{font-size:0.82rem;color:#8696a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ci-badge{background:#e8547a;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;}
+  .online-ring{border:3px solid #25d366!important;}
+  .open-btn{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:#e8547a;color:white;border:none;padding:8px 14px;border-radius:20px;font-size:0.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  /* Lock screen */
+  #lockScreen{position:fixed;inset:0;background:#111b21;display:flex;align-items:center;justify-content:center;z-index:100;padding:28px;}
+  .lock-box{width:100%;max-width:300px;text-align:center;}
+  .lock-icon{font-size:3rem;margin-bottom:16px;}
+  .lock-box h2{font-size:1.2rem;margin-bottom:6px;}
+  .lock-box p{color:#8696a0;font-size:0.82rem;margin-bottom:24px;}
+  .lock-input{background:#2a3942;border:none;color:#e9edef;padding:13px 16px;border-radius:10px;font-size:0.95rem;width:100%;margin-bottom:12px;outline:none;text-align:center;letter-spacing:4px;font-size:1.2rem;}
+  .lock-input::placeholder{letter-spacing:0;font-size:0.9rem;color:#8696a0;}
+  .lock-btn{background:#e8547a;color:white;border:none;padding:14px;border-radius:10px;font-size:0.95rem;font-family:'DM Sans',sans-serif;font-weight:500;width:100%;cursor:pointer;}
+  .toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(10px);background:#2a3942;color:#e9edef;padding:9px 18px;border-radius:20px;font-size:0.8rem;opacity:0;transition:all 0.25s;z-index:999;white-space:nowrap;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-icon">🔐</div>
+    <h2>Dashboard</h2>
+    <p>Admin password daalo</p>
+    <input type="password" class="lock-input" id="lockPw" placeholder="Password..." autofocus>
+    <button class="lock-btn" onclick="unlock()">Unlock →</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" style="display:none;flex-direction:column;height:100dvh;">
+  <div class="header">
+    <h2>💬 Chats</h2>
+    <span style="font-size:0.75rem;color:#8696a0;" id="lastUpdate"></span>
+  </div>
+  <div class="chats-list" id="chatsList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCJzOSIZfY1OBS372rzZK3NNO4W3VXV6GU",
+  authDomain: "rplove-d8469.firebaseapp.com",
+  databaseURL: "https://rplove-d8469-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "rplove-d8469",
+  storageBucket: "rplove-d8469.firebasestorage.app",
+  messagingSenderId: "557495378550",
+  appId: "1:557495378550:web:9262d90aa39a2463c0b557"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const ADMIN_PASS = 'rplove';
+const ROOMS = [
+  { id: 'room_s', name: 'S', label: 'S wali chat' },
+  { id: 'room_r', name: 'R', label: 'R wali chat' }
+];
+
+window.unlock = () => {
+  const pw = document.getElementById('lockPw').value;
+  if (pw !== ADMIN_PASS) { showToast('❌ Wrong password!'); return; }
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'flex';
+  loadDashboard();
+};
+
+document.getElementById('lockPw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') window.unlock();
+});
+
+function loadDashboard() {
+  const list = document.getElementById('chatsList');
+  list.innerHTML = '';
+
+  ROOMS.forEach(room => {
+    const item = document.createElement('div');
+    item.className = 'chat-item';
+    item.innerHTML = `
+      <div class="ci-avatar" id="av-${room.id}">${room.name}</div>
+      <div class="ci-info">
+        <div class="ci-top">
+          <span class="ci-name">${room.label}</span>
+          <span class="ci-time" id="time-${room.id}">-</span>
+        </div>
+        <div class="ci-msg" id="msg-${room.id}">Loading...</div>
+      </div>
+      <span class="ci-badge" id="badge-${room.id}" style="display:none;">0</span>
+    `;
+    item.onclick = () => {
+      window.location.href = 'chat.html?room=' + room.id + '&user=Priyanshu';
+    };
+    list.appendChild(item);
+
+    // Watch messages
+    onValue(ref(db, 'rooms/' + room.id + '/messages'), snap => {
+      const data = snap.val() || {};
+      const msgs = Object.values(data).sort((a,b) => a.ts - b.ts);
+      const last = msgs[msgs.length - 1];
+
+      if (last) {
+        const msgEl = document.getElementById('msg-' + room.id);
+        const timeEl = document.getElementById('time-' + room.id);
+        const prefix = last.name === 'Priyanshu' ? 'You: ' : '';
+        msgEl.textContent = prefix + (last.type === 'photo' ? '📷 Photo' : last.text || '');
+        timeEl.textContent = timeAgo(last.ts);
+
+        // Unread count
+        const unread = msgs.filter(m => m.name !== 'Priyanshu' && !m.seen).length;
+        const badge = document.getElementById('badge-' + room.id);
+        if (unread > 0) {
+          badge.textContent = unread;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      } else {
+        document.getElementById('msg-' + room.id).textContent = 'Koi message nahi';
+      }
+    });
+
+    // Watch presence (online status)
+    onValue(ref(db, 'rooms/' + room.id + '/presence'), snap => {
+      const data = snap.val() || {};
+      const others = Object.values(data).filter(u => u.name !== 'Priyanshu');
+      const av = document.getElementById('av-' + room.id);
+      if (others.length > 0 && others[0].online) {
+        av.style.border = '3px solid #25d366';
+      } else {
+        av.style.border = 'none';
+      }
+    });
+  });
+
+  document.getElementById('lastUpdate').textContent = 'Live';
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(diff / 3600000);
+  if (m < 1) return 'Abhi';
+  if (m < 60) return m + 'm';
+  if (h < 24) return h + 'h';
+  return Math.floor(h/24) + 'd';
+}
+
+window.showToast = msg => {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+};
+</script>
+</body>
+</html>
