@@ -145,6 +145,9 @@
   .mood-item .me { font-size:1.8rem; }
   .mood-item .ml { font-size:0.65rem; color:var(--muted); }
 
+  /* STATUS */
+  .status-ring-active { border:3px solid #e8547a !important; }
+  .status-ring-viewed { border:3px solid var(--muted) !important; }
   .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(10px); background:#2a3942; color:var(--text); padding:9px 18px; border-radius:20px; font-size:0.8rem; opacity:0; transition:all 0.25s; z-index:999; border:1px solid var(--border); white-space:nowrap; pointer-events:none; }
   .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
@@ -181,6 +184,9 @@
     <span class="header-mood" id="moodEmoji" onclick="openMoodPicker()" title="Mood">😶</span>
     <button id="clearBtn" onclick="clearMyMessages()">🗑 Clear</button>
     <button id="timerBtn" onclick="toggleTimerMenu()" title="Auto delete timer" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;flex-shrink:0;">⏱️</button>
+    <button onclick="openStatusViewer()" id="statusBtn" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;flex-shrink:0;position:relative;">🔵<span id="statusDot" style="display:none;position:absolute;top:0;right:0;width:8px;height:8px;background:#25d366;border-radius:50;"></span></button>
+    <button onclick="startCall('video')" id="callBtn" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;flex-shrink:0;" title="Video Call">📹</button>
+    <button onclick="startCall('audio')" id="audioCallBtn" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;flex-shrink:0;" title="Audio Call">📞</button>
   </div>
 
   <div id="moodBar"></div>
@@ -273,6 +279,117 @@
       <div class="mood-item" onclick="setMood('🥺','Plz')"><span class="me">🥺</span><span class="ml">Plz</span></div>
       <div class="mood-item" onclick="setMood('😇','Shant')"><span class="me">😇</span><span class="ml">Shant</span></div>
       <div class="mood-item" onclick="setMood('','')"><span class="me">❌</span><span class="ml">Clear</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- CALL UI (Video + Audio) -->
+<div id="callScreen" style="display:none;position:fixed;inset:0;background:#111b21;z-index:700;flex-direction:column;align-items:center;justify-content:center;">
+  
+  <!-- Video mode -->
+  <div id="videoMode" style="display:none;width:100%;height:100%;position:relative;">
+    <video id="remoteVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>
+    <video id="localVideo" autoplay playsinline muted style="position:absolute;top:16px;right:16px;width:100px;height:140px;object-fit:cover;border-radius:12px;border:2px solid rgba(255,255,255,0.3);z-index:10;"></video>
+  </div>
+
+  <!-- Audio mode -->
+  <div id="audioMode" style="display:none;flex-direction:column;align-items:center;gap:20px;">
+    <div id="callAvatar" style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#e8547a,#a02050);display:flex;align-items:center;justify-content:center;font-size:2.5rem;font-weight:700;color:white;"></div>
+    <div id="callName" style="font-size:1.3rem;font-weight:600;color:white;"></div>
+    <audio id="remoteAudio" autoplay></audio>
+  </div>
+
+  <!-- Call status -->
+  <div style="position:absolute;top:40px;left:0;right:0;text-align:center;z-index:10;">
+    <div id="callStatus" style="color:white;font-size:0.85rem;opacity:0.8;">Connecting...</div>
+    <div id="callTimer" style="color:white;font-size:1.1rem;font-weight:600;margin-top:4px;"></div>
+  </div>
+
+  <!-- Controls -->
+  <div style="position:absolute;bottom:50px;left:0;right:0;display:flex;justify-content:center;gap:20px;z-index:10;">
+    <button onclick="toggleMic()" id="micBtn" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:1.4rem;cursor:pointer;">🎤</button>
+    <button onclick="endCall()" style="width:64px;height:64px;border-radius:50%;background:#c0392b;border:none;color:white;font-size:1.6rem;cursor:pointer;">📵</button>
+    <button onclick="toggleCam()" id="camBtn" style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:1.4rem;cursor:pointer;">📹</button>
+  </div>
+</div>
+
+<!-- INCOMING CALL -->
+<div id="incomingCall" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#202c33;border-radius:20px 20px 0 0;padding:24px;z-index:700;text-align:center;">
+  <div style="font-size:3rem;margin-bottom:8px;" id="incomingCallIcon">📹</div>
+  <div id="callerName" style="font-size:1.1rem;font-weight:600;margin-bottom:4px;"></div>
+  <div style="font-size:0.82rem;color:#8696a0;margin-bottom:24px;" id="incomingCallType">Video call aa raha hai...</div>
+  <div style="display:flex;justify-content:center;gap:40px;">
+    <button onclick="rejectCall()" style="width:60px;height:60px;border-radius:50%;background:#c0392b;border:none;color:white;font-size:1.5rem;cursor:pointer;">📵</button>
+    <button onclick="acceptCall()" style="width:60px;height:60px;border-radius:50%;background:#25d366;border:none;color:white;font-size:1.5rem;cursor:pointer;">📹</button>
+  </div>
+</div>
+
+<!-- STATUS VIEWER -->
+<div id="statusOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:600;flex-direction:column;">
+  <div style="padding:16px;display:flex;align-items:center;gap:12px;flex-shrink:0;">
+    <div id="statusViewerAvatar" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#e8547a,#a02050);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:1rem;overflow:hidden;flex-shrink:0;"></div>
+    <div>
+      <div id="statusViewerName" style="font-size:0.9rem;font-weight:600;color:white;"></div>
+      <div id="statusViewerTime" style="font-size:0.72rem;color:#8696a0;"></div>
+    </div>
+    <button onclick="closeStatusViewer()" style="margin-left:auto;background:none;border:none;color:white;font-size:1.3rem;cursor:pointer;">✕</button>
+  </div>
+  <!-- Progress bar -->
+  <div style="height:3px;background:rgba(255,255,255,0.2);margin:0 16px;border-radius:2px;">
+    <div id="statusProgress" style="height:100%;background:white;border-radius:2px;width:0%;transition:width 5s linear;"></div>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <img id="statusViewerImg" src="" style="max-width:100%;max-height:70vh;border-radius:8px;display:none;object-fit:contain;">
+    <div id="statusViewerText" style="color:white;font-size:1.2rem;text-align:center;display:none;padding:20px;background:rgba(255,255,255,0.1);border-radius:12px;max-width:300px;"></div>
+  </div>
+  <div style="padding:16px;text-align:center;">
+    <span id="statusViewedBy" style="font-size:0.75rem;color:#8696a0;"></span>
+  </div>
+</div>
+
+<!-- STATUS CREATOR -->
+<div id="statusCreator" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:600;flex-direction:column;">
+  <div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);">
+    <button onclick="closeStatusCreator()" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;">✕</button>
+    <h3 style="font-size:1rem;font-weight:600;">Status lagao</h3>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;">
+    <div id="statusPreviewArea" style="width:100%;max-width:300px;min-height:200px;background:var(--panel);border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+      <img id="statusPreviewImg" src="" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:16px;">
+      <span id="statusPreviewText" style="color:var(--muted);font-size:0.9rem;">Preview</span>
+    </div>
+    <div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:10px;">
+      <textarea id="statusTextInput" placeholder="Kuch likho..." style="background:var(--input-bg);border:none;color:var(--text);padding:12px;border-radius:10px;font-size:0.9rem;font-family:DM Sans,sans-serif;outline:none;resize:none;height:80px;width:100%;"></textarea>
+      <button onclick="document.getElementById('statusImgInput').click()" style="background:var(--input-bg);border:none;color:var(--muted);padding:12px;border-radius:10px;font-size:0.9rem;cursor:pointer;">📷 Photo add karo</button>
+      <input type="file" id="statusImgInput" accept="image/*" style="display:none;">
+      <button onclick="postStatus()" style="background:#e8547a;border:none;color:white;padding:14px;border-radius:10px;font-size:0.95rem;font-weight:600;cursor:pointer;">Status Lagao ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS LIST -->
+<div id="statusList" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:600;flex-direction:column;">
+  <div style="padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);">
+    <button onclick="closeStatusList()" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;">✕</button>
+    <h3 style="font-size:1rem;font-weight:600;">Status</h3>
+  </div>
+  <div style="padding:16px;flex:1;overflow-y:auto;">
+    <!-- My status -->
+    <div style="margin-bottom:20px;">
+      <p style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">Mera Status</p>
+      <div onclick="openMyStatus()" style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;cursor:pointer;background:var(--panel);">
+        <div id="myStatusRing" style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#e8547a,#a02050);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:1.2rem;border:3px solid var(--border);flex-shrink:0;" id="myStatusAvatar"></div>
+        <div>
+          <div style="font-size:0.9rem;font-weight:500;" id="myStatusLabel">Status lagao</div>
+          <div style="font-size:0.75rem;color:var(--muted);" id="myStatusTime"></div>
+        </div>
+        <button onclick="event.stopPropagation();openStatusCreator()" style="margin-left:auto;background:none;border:none;color:#e8547a;font-size:1.3rem;cursor:pointer;">+</button>
+      </div>
+    </div>
+    <!-- Others status -->
+    <div>
+      <p style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">Recent Updates</p>
+      <div id="othersStatusList"></div>
     </div>
   </div>
 </div>
@@ -499,7 +616,7 @@ window.enterChat = () => {
     set(ref(db, 'chat/profiles/' + myName), { pic: myPicBase64, name: myName });
   }
   updateMyAvatar();
-  initPresence(); loadMessages(); setupInput(); watchMood(); watchPinned(); watchAutoDelete(); watchProfiles();
+  initPresence(); loadMessages(); setupInput(); watchMood(); watchPinned(); watchAutoDelete(); watchProfiles(); watchStatus(); watchCall();
 };
 
 // PRESENCE
@@ -859,6 +976,476 @@ function setupInput() {
 }
 
 function clearTyping() { if(myName) set(ref(db,'chat/typing/'+myName),{typing:false}); }
+
+// =================== VIDEO CALL (WebRTC) ===================
+let localStream = null;
+let peerConnection = null;
+let callKey = null;
+let micOn = true;
+let camOn = true;
+
+const ICE_SERVERS = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' }
+  ]
+};
+
+let callType = 'video';
+let callTimerInterval = null;
+let callSeconds = 0;
+
+async function startCall(type = 'video') {
+  callType = type;
+  if (!localStream) {
+    try {
+      const constraints = type === 'video' 
+        ? { video: true, audio: true }
+        : { video: false, audio: true };
+      localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    } catch(e) {
+      showToast('Mic/Camera permission do!'); return;
+    }
+  }
+
+  // Show correct UI
+  document.getElementById('callScreen').style.display = 'flex';
+  if (type === 'video') {
+    document.getElementById('videoMode').style.display = 'block';
+    document.getElementById('audioMode').style.display = 'none';
+    document.getElementById('localVideo').srcObject = localStream;
+    document.getElementById('camBtn').style.display = 'flex';
+  } else {
+    document.getElementById('videoMode').style.display = 'none';
+    document.getElementById('audioMode').style.display = 'flex';
+    document.getElementById('camBtn').style.display = 'none';
+    // Show other person's name
+    const otherName = document.getElementById('headerName').textContent;
+    document.getElementById('callName').textContent = otherName;
+    document.getElementById('callAvatar').textContent = otherName.charAt(0).toUpperCase();
+  }
+  document.getElementById('callStatus').textContent = 'Ring ho raha hai...';
+
+  // Create peer connection
+  peerConnection = new RTCPeerConnection(ICE_SERVERS);
+  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+  // Remote stream
+  peerConnection.ontrack = e => {
+    if (callType === 'video') {
+      document.getElementById('remoteVideo').srcObject = e.streams[0];
+    } else {
+      document.getElementById('remoteAudio').srcObject = e.streams[0];
+    }
+    document.getElementById('callStatus').textContent = 'Connected ✓';
+    startCallTimer();
+  };
+
+  // ICE candidates
+  peerConnection.onicecandidate = e => {
+    if (e.candidate) {
+      push(ref(db, 'chat/call/callerCandidates'), e.candidate.toJSON());
+    }
+  };
+
+  // Create offer
+  const offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
+
+  // Save offer to Firebase
+  callKey = 'call_' + Date.now();
+  await set(ref(db, 'chat/call'), {
+    offer: { type: offer.type, sdp: offer.sdp },
+    caller: myName,
+    callType: callType,
+    status: 'ringing',
+    ts: Date.now()
+  });
+
+  // Watch for answer
+  onValue(ref(db, 'chat/call/answer'), async snap => {
+    const answer = snap.val();
+    if (answer && peerConnection && !peerConnection.currentRemoteDescription) {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+    }
+  });
+
+  // Watch callee ICE candidates
+  onValue(ref(db, 'chat/call/calleeCandidates'), snap => {
+    snap.forEach(child => {
+      if (peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(child.val()));
+    });
+  });
+
+  // Watch if rejected
+  onValue(ref(db, 'chat/call/status'), snap => {
+    if (snap.val() === 'rejected' || snap.val() === 'ended') endCall();
+  });
+}
+
+window.startCall = startCall; window.startCallTimer = startCallTimer;
+
+async function acceptCall() {
+  document.getElementById('incomingCall').style.display = 'none';
+
+  if (!localStream) {
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    } catch(e) {
+      showToast('Camera/Mic permission do!'); return;
+    }
+  }
+
+  document.getElementById('callScreen').style.display = 'flex';
+  document.getElementById('callStatus').textContent = 'Connecting...';
+  if (callType === 'video') {
+    document.getElementById('videoMode').style.display = 'block';
+    document.getElementById('audioMode').style.display = 'none';
+    document.getElementById('localVideo').srcObject = localStream;
+    document.getElementById('camBtn').style.display = 'flex';
+  } else {
+    document.getElementById('videoMode').style.display = 'none';
+    document.getElementById('audioMode').style.display = 'flex';
+    document.getElementById('camBtn').style.display = 'none';
+    const callerN = document.getElementById('callerName').textContent;
+    document.getElementById('callName').textContent = callerN;
+    document.getElementById('callAvatar').textContent = callerN.charAt(0).toUpperCase();
+  }
+
+  peerConnection = new RTCPeerConnection(ICE_SERVERS);
+  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+  peerConnection.ontrack = e => {
+    if (callType === 'video') {
+      document.getElementById('remoteVideo').srcObject = e.streams[0];
+    } else {
+      document.getElementById('remoteAudio').srcObject = e.streams[0];
+    }
+    document.getElementById('callStatus').textContent = 'Connected ✓';
+    startCallTimer();
+  };
+
+  peerConnection.onicecandidate = e => {
+    if (e.candidate) push(ref(db, 'chat/call/calleeCandidates'), e.candidate.toJSON());
+  };
+
+  // Get offer
+  const snap = await get(ref(db, 'chat/call/offer'));
+  const offer = snap.val();
+  await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+  const answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
+  await set(ref(db, 'chat/call/answer'), { type: answer.type, sdp: answer.sdp });
+  await set(ref(db, 'chat/call/status'), 'connected');
+
+  // Caller ICE candidates
+  onValue(ref(db, 'chat/call/callerCandidates'), snap => {
+    snap.forEach(child => {
+      if (peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(child.val()));
+    });
+  });
+}
+window.acceptCall = acceptCall;
+
+function rejectCall() {
+  document.getElementById('incomingCall').style.display = 'none';
+  set(ref(db, 'chat/call/status'), 'rejected');
+}
+window.rejectCall = rejectCall;
+
+function startCallTimer() {
+  callSeconds = 0;
+  if (callTimerInterval) clearInterval(callTimerInterval);
+  callTimerInterval = setInterval(() => {
+    callSeconds++;
+    const m = Math.floor(callSeconds / 60).toString().padStart(2, '0');
+    const s = (callSeconds % 60).toString().padStart(2, '0');
+    document.getElementById('callTimer').textContent = m + ':' + s;
+  }, 1000);
+}
+
+function endCall() {
+  if (callTimerInterval) { clearInterval(callTimerInterval); callTimerInterval = null; }
+  if (peerConnection) { peerConnection.close(); peerConnection = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  document.getElementById('callScreen').style.display = 'none';
+  document.getElementById('callTimer').textContent = '';
+  const rv = document.getElementById('remoteVideo');
+  const lv = document.getElementById('localVideo');
+  const ra = document.getElementById('remoteAudio');
+  if (rv) rv.srcObject = null;
+  if (lv) lv.srcObject = null;
+  if (ra) ra.srcObject = null;
+  set(ref(db, 'chat/call/status'), 'ended');
+  setTimeout(() => remove(ref(db, 'chat/call')), 1000);
+}
+window.endCall = endCall;
+
+function toggleMic() {
+  if (!localStream) return;
+  micOn = !micOn;
+  localStream.getAudioTracks().forEach(t => t.enabled = micOn);
+  document.getElementById('micBtn').textContent = micOn ? '🎤' : '🔇';
+}
+window.toggleMic = toggleMic;
+
+function toggleCam() {
+  if (!localStream) return;
+  camOn = !camOn;
+  localStream.getVideoTracks().forEach(t => t.enabled = camOn);
+  document.getElementById('camBtn').textContent = camOn ? '📹' : '📷';
+}
+window.toggleCam = toggleCam;
+
+// Watch incoming calls
+function watchCall() {
+  onValue(ref(db, 'chat/call'), snap => {
+    const data = snap.val();
+    if (!data) return;
+    if (data.caller !== myName && data.status === 'ringing' && !peerConnection) {
+      callType = data.callType || 'video';
+      document.getElementById('callerName').textContent = data.caller;
+      document.getElementById('incomingCallIcon').textContent = callType === 'video' ? '📹' : '📞';
+      document.getElementById('incomingCallType').textContent = callType === 'video' ? 'Video call aa raha hai...' : 'Audio call aa raha hai...';
+      document.getElementById('incomingCall').style.display = 'block';
+      playNotif();
+    }
+  });
+}
+// =================== END VIDEO CALL ===================
+
+// =================== STATUS SYSTEM ===================
+let currentStatusIndex = 0;
+let allStatuses = [];
+
+window.openStatusViewer = () => {
+  // Show status list
+  document.getElementById('statusList').style.display = 'flex';
+  loadStatuses();
+};
+
+window.closeStatusList = () => {
+  document.getElementById('statusList').style.display = 'none';
+};
+
+window.openStatusCreator = () => {
+  document.getElementById('statusCreator').style.display = 'flex';
+};
+
+window.closeStatusCreator = () => {
+  document.getElementById('statusCreator').style.display = 'none';
+  document.getElementById('statusTextInput').value = '';
+  document.getElementById('statusPreviewImg').style.display = 'none';
+  document.getElementById('statusPreviewImg').src = '';
+  document.getElementById('statusPreviewText').style.display = 'block';
+};
+
+window.closeStatusViewer = () => {
+  document.getElementById('statusOverlay').style.display = 'none';
+  document.getElementById('statusProgress').style.width = '0%';
+};
+
+// Status image preview
+document.getElementById('statusImgInput').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    const base64 = await compressImage(file);
+    document.getElementById('statusPreviewImg').src = base64;
+    document.getElementById('statusPreviewImg').style.display = 'block';
+    document.getElementById('statusPreviewText').style.display = 'none';
+  } catch { showToast('Image load nahi hui'); }
+  e.target.value = '';
+});
+
+// Post status
+window.postStatus = async () => {
+  const text = document.getElementById('statusTextInput').value.trim();
+  const imgSrc = document.getElementById('statusPreviewImg').src;
+  const hasImg = document.getElementById('statusPreviewImg').style.display !== 'none' && imgSrc;
+
+  if (!text && !hasImg) { showToast('Kuch toh likho ya photo add karo!'); return; }
+
+  const statusData = {
+    name: myName,
+    text: text || '',
+    img: hasImg ? imgSrc : null,
+    ts: Date.now(),
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+    views: {}
+  };
+
+  await push(ref(db, 'chat/status'), statusData);
+  showToast('Status lag gaya! 🎉');
+  closeStatusCreator();
+  closeStatusList();
+};
+
+// Load statuses
+function loadStatuses() {
+  get(ref(db, 'chat/status')).then(snap => {
+    const data = snap.val() || {};
+    const now = Date.now();
+
+    // Filter expired
+    const valid = Object.entries(data).filter(([k, s]) => s.expiresAt > now);
+
+    // Delete expired ones
+    Object.entries(data).filter(([k, s]) => s.expiresAt <= now).forEach(([k]) => {
+      remove(ref(db, 'chat/status/' + k));
+    });
+
+    // My statuses
+    const myStatuses = valid.filter(([k, s]) => s.name === myName);
+    const otherStatuses = valid.filter(([k, s]) => s.name !== myName);
+
+    // Update my status UI
+    const myLabel = document.getElementById('myStatusLabel');
+    const myTime = document.getElementById('myStatusTime');
+    const myRing = document.getElementById('myStatusRing');
+    if (myStatuses.length > 0) {
+      myLabel.textContent = myStatuses.length + ' status hai';
+      const latest = myStatuses[myStatuses.length - 1][1];
+      myTime.textContent = timeAgo(latest.ts);
+      myRing.style.border = '3px solid #e8547a';
+    } else {
+      myLabel.textContent = 'Status lagao';
+      myTime.textContent = '';
+      myRing.style.border = '3px solid var(--border)';
+    }
+    myRing.textContent = myName.charAt(0).toUpperCase();
+
+    // Others statuses
+    const othersDiv = document.getElementById('othersStatusList');
+    othersDiv.innerHTML = '';
+
+    // Group by name
+    const grouped = {};
+    otherStatuses.forEach(([k, s]) => {
+      if (!grouped[s.name]) grouped[s.name] = [];
+      grouped[s.name].push([k, s]);
+    });
+
+    if (Object.keys(grouped).length === 0) {
+      othersDiv.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;text-align:center;padding:20px;">Koi status nahi abhi</p>';
+    }
+
+    Object.entries(grouped).forEach(([name, statuses]) => {
+      const viewed = statuses.every(([k, s]) => s.views && s.views[myName]);
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;cursor:pointer;';
+      item.onclick = () => viewStatus(statuses);
+      
+      const ring = document.createElement('div');
+      ring.style.cssText = 'width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#e8547a,#a02050);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:1.2rem;flex-shrink:0;border:3px solid ' + (viewed ? 'var(--muted)' : '#e8547a') + ';';
+      ring.textContent = name.charAt(0).toUpperCase();
+      
+      const info = document.createElement('div');
+      info.innerHTML = '<div style="font-size:0.9rem;font-weight:500;">' + name + '</div><div style="font-size:0.75rem;color:var(--muted);">' + timeAgo(statuses[statuses.length-1][1].ts) + '</div>';
+      
+      item.appendChild(ring);
+      item.appendChild(info);
+      othersDiv.appendChild(item);
+    });
+
+    // Check if any new status
+    const hasNew = otherStatuses.some(([k, s]) => !s.views || !s.views[myName]);
+    document.getElementById('statusBtn').style.color = hasNew ? '#e8547a' : 'var(--muted)';
+  });
+}
+
+window.openMyStatus = () => {
+  get(ref(db, 'chat/status')).then(snap => {
+    const data = snap.val() || {};
+    const now = Date.now();
+    const myStatuses = Object.entries(data).filter(([k,s]) => s.name === myName && s.expiresAt > now);
+    if (myStatuses.length === 0) { openStatusCreator(); return; }
+    viewStatus(myStatuses, true);
+  });
+};
+
+function viewStatus(statuses, isOwn = false) {
+  document.getElementById('statusList').style.display = 'none';
+  allStatuses = statuses;
+  currentStatusIndex = 0;
+  showStatusAt(0, isOwn);
+}
+
+function showStatusAt(index, isOwn = false) {
+  if (index >= allStatuses.length) { closeStatusViewer(); return; }
+  const [key, status] = allStatuses[index];
+  
+  document.getElementById('statusOverlay').style.display = 'flex';
+  document.getElementById('statusViewerName').textContent = status.name;
+  document.getElementById('statusViewerTime').textContent = timeAgo(status.ts);
+  document.getElementById('statusViewerAvatar').textContent = status.name.charAt(0).toUpperCase();
+
+  // Show content
+  const imgEl = document.getElementById('statusViewerImg');
+  const textEl = document.getElementById('statusViewerText');
+  
+  if (status.img) {
+    imgEl.src = status.img;
+    imgEl.style.display = 'block';
+  } else {
+    imgEl.style.display = 'none';
+  }
+  
+  if (status.text) {
+    textEl.textContent = status.text;
+    textEl.style.display = 'block';
+  } else {
+    textEl.style.display = 'none';
+  }
+
+  // Views
+  const viewCount = status.views ? Object.keys(status.views).length : 0;
+  document.getElementById('statusViewedBy').textContent = isOwn ? '👁 ' + viewCount + ' views' : '';
+
+  // Mark as viewed
+  if (!isOwn) {
+    set(ref(db, 'chat/status/' + key + '/views/' + myName), true);
+  }
+
+  // Progress bar
+  const prog = document.getElementById('statusProgress');
+  prog.style.transition = 'none';
+  prog.style.width = '0%';
+  setTimeout(() => {
+    prog.style.transition = 'width 5s linear';
+    prog.style.width = '100%';
+  }, 100);
+
+  // Auto next after 5 seconds
+  setTimeout(() => {
+    if (index + 1 < allStatuses.length) showStatusAt(index + 1, isOwn);
+    else closeStatusViewer();
+  }, 5000);
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(diff / 3600000);
+  if (m < 1) return 'Abhi';
+  if (m < 60) return m + ' min pehle';
+  if (h < 24) return h + ' ghante pehle';
+  return '1 din pehle';
+}
+
+// Watch for new statuses
+function watchStatus() {
+  onValue(ref(db, 'chat/status'), snap => {
+    const data = snap.val() || {};
+    const now = Date.now();
+    const hasNew = Object.values(data).some(s => 
+      s.name !== myName && s.expiresAt > now && (!s.views || !s.views[myName])
+    );
+    const btn = document.getElementById('statusBtn');
+    if (btn) btn.style.color = hasNew ? '#e8547a' : 'var(--muted)';
+  });
+}
+// =================== END STATUS ===================
 
 window.showToast = msg => {
   const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
