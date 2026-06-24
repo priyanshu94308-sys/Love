@@ -30,6 +30,18 @@
 const ROOMS = { 'S': 'room_s', 'R': 'room_r', 'Priyanshu': 'dashboard' };
 const S_PASS = '1234Qw@#';
 
+// Show/hide password field based on name
+document.getElementById('nameInput').addEventListener('input', () => {
+  const val = document.getElementById('nameInput').value.trim().toLowerCase();
+  const pwField = document.getElementById('pwInput');
+  if (val === 's') {
+    pwField.style.display = 'block';
+  } else {
+    pwField.style.display = 'none';
+    pwField.value = '';
+  }
+});
+
 function enterChat() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) { showToast('Naam likho!'); return; }
@@ -37,15 +49,14 @@ function enterChat() {
   const key = Object.keys(ROOMS).find(k => k.toLowerCase() === name.toLowerCase());
   if (!key) { showToast('Naam sahi nahi hai!'); return; }
 
-  const room = ROOMS[key];
-
   // S ke liye password check
   if (key === 'S') {
     const pw = document.getElementById('pwInput').value.trim();
-    if (!pw) { showPwField(); showToast('Password bhi daalo!'); return; }
-    if (pw !== S_PASS) { showToast('❌ Wrong password!'); document.getElementById('pwInput').value=''; return; }
+    if (!pw) { showToast('Password daalo!'); document.getElementById('pwInput').focus(); return; }
+    if (pw !== S_PASS) { showToast('❌ Wrong password!'); document.getElementById('pwInput').value = ''; return; }
   }
 
+  const room = ROOMS[key];
   if (room === 'dashboard') {
     window.location.href = 'dashboard.html';
   } else {
@@ -53,30 +64,19 @@ function enterChat() {
   }
 }
 
-function showPwField() {
-  document.getElementById('pwInput').style.display = 'block';
-  document.getElementById('pwInput').focus();
-}
-
-// Show password field only when S is typed
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('nameInput').addEventListener('input', () => {
-    const val = document.getElementById('nameInput').value.trim().toLowerCase();
-    document.getElementById('pwInput').style.display = val === 's' ? 'block' : 'none';
-  });
-});
-
 document.getElementById('nameInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const val = e.target.value.trim().toLowerCase();
-    if (val === 's') { showPwField(); }
-    else enterChat();
+    if (val === 's' && document.getElementById('pwInput').style.display === 'none') {
+      document.getElementById('pwInput').style.display = 'block';
+      document.getElementById('pwInput').focus();
+    } else {
+      enterChat();
+    }
   }
 });
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('pwInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') enterChat();
-  });
+document.getElementById('pwInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') enterChat();
 });
 
 function showToast(msg) {
